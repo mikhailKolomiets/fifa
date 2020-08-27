@@ -6,6 +6,8 @@ import site.fifa.entity.Player;
 import site.fifa.entity.PlayerType;
 import site.fifa.repository.PlayerRepository;
 
+import java.util.List;
+
 @Service
 public class PlayerService {
 
@@ -32,6 +34,10 @@ public class PlayerService {
 
     public void savePlayer(Player player) {
         playerRepository.save(player);
+    }
+
+    public List<Player> getByTeamId(Long teamId) {
+        return playerRepository.getByTeamId(teamId);
     }
 
     private int generateValueBetween (int first, int second) {

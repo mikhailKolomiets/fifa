@@ -3,9 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <title>FIFA 2020</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="js/main-page.js"></script>
 </head>
 <body>
-<h2>Привет в игре ФИФА!</h2>
-<div>Быстрый матч</div>
+<h2 id="message">Привет в игре ФИФА!</h2>
+<div id="play">Быстрый матч</div>
+<div id="team-create">Создать команду</div>
+<div id="team-form">
+    <input id="team-name" type="text" placeholder="Имя команды">
+    <input id="sub-team" type="submit" value="Создать">
+</div>
+<div id="new-team"></div>
 </body>
 </html>
