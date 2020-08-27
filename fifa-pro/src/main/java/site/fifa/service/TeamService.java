@@ -2,10 +2,14 @@ package site.fifa.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import site.fifa.dto.TeamDTO;
 import site.fifa.entity.Player;
 import site.fifa.entity.PlayerType;
 import site.fifa.entity.Team;
 import site.fifa.repository.TeamRepository;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class TeamService {
@@ -15,16 +19,31 @@ public class TeamService {
     @Autowired
     private PlayerService playerService;
 
-    public Team createNewTeam() {
+    public TeamDTO createNewTeam(String name) {
+
+        if(teamRepository.findByName(name) != null)
+            return null;
+
         Team team = new Team();
 
         team.setCountry("Ukraine");
-        team.setName("" + (int)(Math.random() * 1000));
+        name = name == null ? "" + (int)(Math.random() * 1000) : name;
+        team.setName(name);
 
         team = teamRepository.save(team);
         makeTeamPlayers(team);
 
-        return team;
+        return new TeamDTO(team, playerService.getByTeamId(team.getId()));
+    }
+
+    public List<Team> getTeams() {
+        List<Team> result = new ArrayList<>();
+        teamRepository.findAll().forEach(result::add);
+        return result;
+    }
+
+    public TeamDTO getTeamById(Long teamId) {
+        return new TeamDTO(teamRepository.findById(teamId).orElse(null), playerService.getByTeamId(teamId));
     }
 
     private void makeTeamPlayers(Team team) {
