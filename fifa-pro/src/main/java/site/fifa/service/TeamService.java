@@ -1,33 +1,38 @@
 package site.fifa.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import site.fifa.dto.NewTeamCreateRequest;
 import site.fifa.dto.TeamDTO;
+import site.fifa.entity.Country;
 import site.fifa.entity.Player;
 import site.fifa.entity.PlayerType;
 import site.fifa.entity.Team;
+import site.fifa.repository.CountryRepository;
 import site.fifa.repository.TeamRepository;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class TeamService {
 
-    @Autowired
-    private TeamRepository teamRepository;
-    @Autowired
-    private PlayerService playerService;
 
-    public TeamDTO createNewTeam(String name) {
+    private final TeamRepository teamRepository;
+    private final CountryRepository countryRepository;
+    private final PlayerService playerService;
 
-        if(teamRepository.findByName(name) != null)
+    public TeamDTO createNewTeam(NewTeamCreateRequest request) {
+
+        if(teamRepository.findByName(request.getTeamName()) != null)
             return null;
 
+        Country country = countryRepository.findByCountryName(request.getCountryName());
         Team team = new Team();
 
-        team.setCountry("Ukraine");
-        name = name == null ? "" + (int)(Math.random() * 1000) : name;
+        team.setCountry(country);
+        String name = request.getTeamName() == null ? "" + (int)(Math.random() * 1000) : request.getTeamName();
         team.setName(name);
 
         team = teamRepository.save(team);
