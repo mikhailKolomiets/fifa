@@ -12,7 +12,9 @@ teamForm.hide();
                         if (data.length < 2) {
                             message.text("Для игры надо 2 команды а не " + data.length)
                         } else {
-                            message.text(data[0].name + " us " + data[1].name)
+                            localStorage.setItem("team1",data[1].id);
+                            localStorage.setItem("team2", data[0].id);
+                            message.html("<a href=\"match.html\">" + data[0].name + " us " + data[1].name + "</a>")
                         }
                     }
          });
