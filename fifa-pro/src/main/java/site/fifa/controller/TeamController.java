@@ -1,10 +1,11 @@
 package site.fifa.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import site.fifa.dto.NewTeamCreateRequest;
 import site.fifa.dto.TeamDTO;
 import site.fifa.entity.Team;
 import site.fifa.service.MatchService;
@@ -37,10 +38,10 @@ public class TeamController {
      * @param
      * @return null if team with name is present
      */
-    @PostMapping("create")
-    public TeamDTO createTeam(@Param("teamName") String teamName) {
+    @PostMapping(value = "create", headers = "Accept=*/*", produces = "application/json", consumes="application/json")
+    public TeamDTO createTeam(@RequestBody NewTeamCreateRequest request) {
 
-        return teamService.createNewTeam(teamName);
+        return teamService.createNewTeam(request);
     }
 
 }
