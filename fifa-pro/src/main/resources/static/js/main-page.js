@@ -2,7 +2,8 @@ $(document).ready(function () {
 
 var message = $("#message");
 var teamForm = $("#team-form");
-teamForm.hide();
+var playSelect = $("#play-select");
+hideAll();
 
     $("#play").click(function() {
         $.ajax({
@@ -12,15 +13,31 @@ teamForm.hide();
                         if (data.length < 2) {
                             message.text("Для игры надо 2 команды а не " + data.length)
                         } else {
-                            localStorage.setItem("team1",data[1].id);
-                            localStorage.setItem("team2", data[0].id);
-                            message.html("<a href=\"match.html\">" + data[0].name + " us " + data[1].name + "</a>")
+                            hideAll();
+                            playSelect.show();
+                            for (team in data) {
+                                $('#firstTeamSelect').append($('<option>', {
+                                    value: data[team].id,
+                                    text:  data[team].name
+                                }));
+                                $('#secondTeamSelect').append($('<option>', {
+                                    value: data[team].id,
+                                    text:  data[team].name
+                                }));
+                            }
                         }
                     }
          });
     });
 
+    $("#play-match").click(function() {
+        localStorage.setItem("team1", $('#firstTeamSelect').val());
+        localStorage.setItem("team2", $('#secondTeamSelect').val());
+        window.location.href = "match.html";
+    });
+
     $("#team-create").click(function() {
+        hideAll();
         teamForm.show();
         $.ajax({
             url : "/countries",
@@ -67,5 +84,11 @@ teamForm.hide();
             }
         });
     });
+
+    function hideAll() {
+        teamForm.hide();
+        message.hide();
+        playSelect.hide();
+    }
 
 });
