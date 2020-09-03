@@ -48,12 +48,19 @@ public class MatchService {
 
         if (matchStepDto.getStep() > 90) {
             matchStepDto.setLastStepLog(matchStepDto.showGoals());
-            matchStepDto.getLog().add(matchStepDto.getLastStepLog());
+            matchStepDto.getLog().add("Матч окончен!" + matchStepDto.getLastStepLog());
             return matchStepDto;//todo save result
         }
 
         int addition;
-        matchStepDto.setSecondTeamAction((int)(Math.random() * 3 + 1));
+        double teamActionRandom = Math.random() * 100;
+        if (matchStepDto.getSecondTeamChance() > 75)
+            matchStepDto.setSecondTeamAction(teamActionRandom > 20 ? 1 : teamActionRandom < 10 ? 2 : 3);
+        else if (matchStepDto.getSecondTeamChance() < 40)
+            matchStepDto.setSecondTeamAction(teamActionRandom > 80 ? 1 : teamActionRandom < 35 ? 2 : 3);
+        else
+            matchStepDto.setSecondTeamAction(teamActionRandom > 65 ? 1 : teamActionRandom < 30 ? 2 : 3);
+
         matchStepDto.increaseStep();
         String stepLog = matchStepDto.getStep() +" м: ";
 
@@ -128,7 +135,7 @@ public class MatchService {
                         stepLog += matchStepDto.getFirstPlayer().getName() + " теряет мяч";
                     }
                 } else if (action == 2) {
-                    if (Math.random() * matchStepDto.getFirstPlayer().getSkill() * matchStepDto.getFirstTeamChance() / 100
+                    if (Math.random() * matchStepDto.getFirstPlayer().getSkill()
                             > Math.random() * matchStepDto.getSecondPlayer().getSkill() * matchStepDto.getSecondTeamChance() / 100) {
                         matchStepDto.plusChance(1);
                         stepLog += matchStepDto.getFirstPlayer().getName() + " укрепляет позицию";
@@ -144,7 +151,7 @@ public class MatchService {
                 }
             } else {
                 if (matchStepDto.getSecondTeamAction() == 1) {
-                    if (Math.random() * matchStepDto.getSecondPlayer().getSpeed() * matchStepDto.getSecondTeamAction() / 100
+                    if (Math.random() * matchStepDto.getSecondPlayer().getSpeed()
                             > Math.random() * matchStepDto.getFirstPlayer().getSpeed() * (matchStepDto.getFirstTeamChance() + addition) / 100) {
                         matchStepDto.setPosition(1);
                         matchStepDto.minusChance(2);
