@@ -44,12 +44,35 @@ public class MatchService {
     public MatchStepDto makeStepWithCPU(Long matchId, int action) {
 
         MatchStepDto matchStepDto = getMatchStepDtoById(matchId);
+        matchStepDto.increaseStep();
+        String stepLog = matchStepDto.getStep() + " м: ";
         double attackFactor;
 
-        if (matchStepDto.getStep() > 90) {
+        if (matchStepDto.getStep() > 90 && matchStepDto.getAdditionTime() < 0) {
             matchStepDto.setLastStepLog(matchStepDto.showGoals());
             matchStepDto.getLog().add("Матч окончен!" + matchStepDto.getLastStepLog());
             return matchStepDto;//todo save result
+        }
+
+        if (matchStepDto.getAdditionTime() >= 0) {
+            matchStepDto.decreaseAdditionTime();
+            if(matchStepDto.getAdditionTime() < 0 && matchStepDto.getStep() < 90) {
+                matchStepDto.setStep(45);
+                matchStepDto.setAdditionTime(100);
+            }
+        }
+
+
+        if (matchStepDto.getStep() == 45 || matchStepDto.getStep() == 90) { // todo you know
+            if (matchStepDto.getAdditionTime() < 0) {
+                matchStepDto.generateAdditionTime();
+                stepLog += "Добавлено " + matchStepDto.getAdditionTime() + " м ";
+            } else if (matchStepDto.getAdditionTime() == 100) {
+                matchStepDto.setAdditionTime(-1);
+                matchStepDto.setFirstTeamBall(false);
+                matchStepDto.setPosition(2);
+                stepLog = "Второй тайм!";
+            }
         }
 
         int addition;
@@ -60,9 +83,6 @@ public class MatchService {
             matchStepDto.setSecondTeamAction(teamActionRandom > 80 ? 1 : teamActionRandom < 35 ? 2 : 3);
         else
             matchStepDto.setSecondTeamAction(teamActionRandom > 65 ? 1 : teamActionRandom < 30 ? 2 : 3);
-
-        matchStepDto.increaseStep();
-        String stepLog = matchStepDto.getStep() +" м: ";
 
         if (matchStepDto.getPosition() == 1) {
             matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.CD));

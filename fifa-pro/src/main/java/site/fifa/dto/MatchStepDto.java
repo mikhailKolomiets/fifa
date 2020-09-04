@@ -12,6 +12,7 @@ public class MatchStepDto {
 
     private MatchDto matchDto;
     private int step = -1;
+    private int additionTime = -1;
     private int position = 2;
     private Player firstPlayer;
     private Player secondPlayer;
@@ -53,8 +54,16 @@ public class MatchStepDto {
         }
     }
 
+    public void decreaseAdditionTime() {
+        additionTime--;
+    }
+
     public String showGoals() {
         return matchDto.getFirstTeam().getTeam().getName() + " \"" + goalFirstTeam + ":" + goalSecondTeam +"\" " + matchDto.getSecondTeam().getTeam().getName();
+    }
+
+    public void generateAdditionTime() {
+        additionTime = (int) (Math.random() * 6);
     }
 
 }
