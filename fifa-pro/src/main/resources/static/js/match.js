@@ -11,6 +11,10 @@ statusMatch = $("#match-status");
             $("#title-change").text(data.firstTeam.team.name + " 0:0 " + data.secondTeam.team.name);
             localStorage.setItem("matchId", data.matchId);
             statusMatch.text("Матч начался");
+                            $("#show-area").text(". . . 0 -> . . .");
+                            action1.text('Атаковать');
+                            action2.text('Укрепиться в центре');
+                            action3.text('Пас назад');
         }
     });
 
