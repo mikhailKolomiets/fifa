@@ -45,6 +45,7 @@ public class MatchService {
 
         MatchStepDto matchStepDto = getMatchStepDtoById(matchId);
         matchStepDto.increaseStep();
+        matchStepDto.getStatisticDto().countPercentageByTeamHold(matchStepDto.isFirstTeamBall());
         String stepLog = matchStepDto.getStep() + " м: ";
         double attackFactor;
 
@@ -63,7 +64,7 @@ public class MatchService {
         }
 
 
-        if (matchStepDto.getStep() == 45 || matchStepDto.getStep() == 90) { // todo you know
+        if (matchStepDto.getStep() == 45 || matchStepDto.getStep() == 90) {
             if (matchStepDto.getAdditionTime() < 0) {
                 matchStepDto.generateAdditionTime();
                 stepLog += "Добавлено " + matchStepDto.getAdditionTime() + " м ";
@@ -77,6 +78,8 @@ public class MatchService {
 
         int addition;
         double teamActionRandom = Math.random() * 100;
+
+        // magic cpu randomise algorithm
         if (matchStepDto.getSecondTeamChance() > 75)
             matchStepDto.setSecondTeamAction(teamActionRandom > 20 ? 1 : teamActionRandom < 10 ? 2 : 3);
         else if (matchStepDto.getSecondTeamChance() < 40)
@@ -110,6 +113,7 @@ public class MatchService {
             } else {
                 addition = matchStepDto.getSecondTeamAction() == action ? 50 : 0;
                 if (matchStepDto.getSecondTeamAction() == 1) {
+                    matchStepDto.getStatisticDto().getGoalKick().y ++;
                     matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.GK));
                     attackFactor = Math.random() * matchStepDto.getSecondPlayer().getSkill() * matchStepDto.getSecondTeamChance() / 100
                             - Math.random() * matchStepDto.getFirstPlayer().getSkill() * (matchStepDto.getFirstTeamChance() + addition) / 100;
@@ -118,6 +122,7 @@ public class MatchService {
                         matchStepDto.setFirstTeamBall(true);
                         matchStepDto.increaseGoal(2);
                         stepLog += matchStepDto.getSecondPlayer().getName() + attackLog(attackFactor, addition) + matchStepDto.showGoals();
+                        matchStepDto.getStatisticDto().getGoals().y ++;
                     } else {
                         matchStepDto.setFirstTeamBall(true);
                         stepLog += matchStepDto.getFirstPlayer().getName() + attackLog(attackFactor, addition);
@@ -223,6 +228,7 @@ public class MatchService {
             } else {
                 addition = matchStepDto.getSecondTeamAction() == action ? 50 : 0;
                 if (action == 1) {
+                    matchStepDto.getStatisticDto().getGoalKick().x++;
                     matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.GK));
                     attackFactor = Math.random() * matchStepDto.getFirstPlayer().getSkill() * matchStepDto.getFirstTeamChance() / 100
                             - Math.random() * matchStepDto.getSecondPlayer().getSkill() * (matchStepDto.getSecondTeamChance() + addition) / 100;
@@ -231,6 +237,7 @@ public class MatchService {
                         matchStepDto.setFirstTeamBall(false);
                         matchStepDto.increaseGoal(1);
                         stepLog += matchStepDto.getFirstPlayer().getName() + attackLog(attackFactor, addition) + matchStepDto.showGoals();
+                        matchStepDto.getStatisticDto().getGoals().x++; // todo make in drunk, if its ok just delete this todo, another way please fix the statistic goal increase)
                     } else {
                         matchStepDto.setFirstTeamBall(false);
                         stepLog += matchStepDto.getSecondPlayer().getName() + attackLog(attackFactor, addition);
