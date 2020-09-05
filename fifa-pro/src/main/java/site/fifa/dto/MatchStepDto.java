@@ -24,6 +24,7 @@ public class MatchStepDto {
     private int goalFirstTeam;
     private int goalSecondTeam;
     private String lastStepLog = step + " m: Матч начался";
+    private StatisticDto statisticDto = new StatisticDto();
     private ArrayList<String> log = new ArrayList<>();
 
     public void plusChance(int team) {
