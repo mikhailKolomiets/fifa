@@ -21,4 +21,6 @@ public interface TeamRepository extends CrudRepository<Team, Long> {
     @Query("update Team t set t.leagueId = :lid where t.id = :id")
     void changeLeagueIdById(@Param(value = "lid") Long leagueId, @Param(value = "id") Long teamId);
 
+    List<Team> getByLeagueId(Long leagueId);
+
 }
