@@ -1,13 +1,16 @@
 package site.fifa.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import site.fifa.dto.MatchDto;
 import site.fifa.dto.MatchStepDto;
 import site.fifa.dto.PlaySide;
 import site.fifa.dto.TeamDTO;
 import site.fifa.entity.Player;
 import site.fifa.entity.PlayerType;
+import site.fifa.entity.Statistic;
 import site.fifa.entity.match.MatchPlay;
 import site.fifa.entity.match.MatchStatus;
 import site.fifa.entity.match.MatchType;
@@ -25,14 +28,19 @@ public class MatchService {
     private TeamService teamService;
     @Autowired
     private MatchRepository matchRepository;
+    @Autowired
+    private StatisticService statisticService;
 
     private static ArrayList<MatchStepDto> matchStepDtos = new ArrayList<>();
 
+    @Transactional
     public MatchDto startMatchWithPC(Long firstTeamId, Long secondTeamId) {
-        MatchPlay match = matchRepository.getByFirstTeamIdAndSecondTeamIdAndStatus(firstTeamId, secondTeamId, MatchStatus.STARTED)
+        MatchPlay match = matchRepository.getByFirstTeamIdAndSecondTeamIdAndStatus(firstTeamId, secondTeamId, MatchStatus.CREATED)
                 .stream().findAny().orElse(null);
         if (match == null) {
-            match = matchRepository.save( new MatchPlay(MatchStatus.STARTED, MatchType.FRIENDLY, LocalDate.now(), firstTeamId, secondTeamId));
+            match = matchRepository.save(new MatchPlay(MatchStatus.STARTED, MatchType.FRIENDLY, LocalDate.now(), firstTeamId, secondTeamId));
+        } else {
+            matchRepository.updateMatchStatusById(MatchStatus.STARTED, match.getId());
         }
 
         MatchStepDto matchStepDto = new MatchStepDto();
@@ -41,6 +49,7 @@ public class MatchService {
         return matchStepDto.getMatchDto();
     }
 
+    @Transactional
     public MatchStepDto makeStepWithCPU(Long matchId, int action) {
 
         MatchStepDto matchStepDto = getMatchStepDtoById(matchId);
@@ -52,12 +61,16 @@ public class MatchService {
         if (matchStepDto.getStep() > 90 && matchStepDto.getAdditionTime() < 0) {
             matchStepDto.setLastStepLog(matchStepDto.showGoals());
             matchStepDto.getLog().add("Матч окончен!" + matchStepDto.getLastStepLog());
-            return matchStepDto;//todo save result
+            if (!statisticService.isExistByMatchId(matchId)) {
+                statisticService.saveStatistic(new Statistic(matchId, matchStepDto.getStatisticDto()));
+                matchRepository.updateMatchStatusById(MatchStatus.FINISHED, matchId);
+            }
+            return matchStepDto;
         }
 
         if (matchStepDto.getAdditionTime() >= 0) {
             matchStepDto.decreaseAdditionTime();
-            if(matchStepDto.getAdditionTime() < 0 && matchStepDto.getStep() < 90) {
+            if (matchStepDto.getAdditionTime() < 0 && matchStepDto.getStep() < 90) {
                 matchStepDto.setStep(45);
                 matchStepDto.setAdditionTime(100);
             }
@@ -77,15 +90,11 @@ public class MatchService {
         }
 
         int addition;
-        double teamActionRandom = Math.random() * 100;
 
-        // magic cpu randomise algorithm
-        if (matchStepDto.getSecondTeamChance() > 75)
-            matchStepDto.setSecondTeamAction(teamActionRandom > 20 ? 1 : teamActionRandom < 10 ? 2 : 3);
-        else if (matchStepDto.getSecondTeamChance() < 40)
-            matchStepDto.setSecondTeamAction(teamActionRandom > 80 ? 1 : teamActionRandom < 35 ? 2 : 3);
-        else
-            matchStepDto.setSecondTeamAction(teamActionRandom > 65 ? 1 : teamActionRandom < 30 ? 2 : 3);
+        if (action < 1 || action > 3) {
+            action = randomizeActionByTeamChance(matchStepDto.getFirstTeamChance());
+        }
+        matchStepDto.setSecondTeamAction(randomizeActionByTeamChance(matchStepDto.getFirstTeamChance()));
 
         if (matchStepDto.getPosition() == 1) {
             matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.CD));
@@ -113,7 +122,7 @@ public class MatchService {
             } else {
                 addition = matchStepDto.getSecondTeamAction() == action ? 50 : 0;
                 if (matchStepDto.getSecondTeamAction() == 1) {
-                    matchStepDto.getStatisticDto().getGoalKick().y ++;
+                    matchStepDto.getStatisticDto().getGoalKick().y++;
                     matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.GK));
                     attackFactor = Math.random() * matchStepDto.getSecondPlayer().getSkill() * matchStepDto.getSecondTeamChance() / 100
                             - Math.random() * matchStepDto.getFirstPlayer().getSkill() * (matchStepDto.getFirstTeamChance() + addition) / 100;
@@ -122,7 +131,7 @@ public class MatchService {
                         matchStepDto.setFirstTeamBall(true);
                         matchStepDto.increaseGoal(2);
                         stepLog += matchStepDto.getSecondPlayer().getName() + attackLog(attackFactor, addition) + matchStepDto.showGoals();
-                        matchStepDto.getStatisticDto().getGoals().y ++;
+                        matchStepDto.getStatisticDto().getGoals().y++;
                     } else {
                         matchStepDto.setFirstTeamBall(true);
                         stepLog += matchStepDto.getFirstPlayer().getName() + attackLog(attackFactor, addition);
@@ -237,7 +246,7 @@ public class MatchService {
                         matchStepDto.setFirstTeamBall(false);
                         matchStepDto.increaseGoal(1);
                         stepLog += matchStepDto.getFirstPlayer().getName() + attackLog(attackFactor, addition) + matchStepDto.showGoals();
-                        matchStepDto.getStatisticDto().getGoals().x++; // todo make in drunk, if its ok just delete this todo, another way please fix the statistic goal increase)
+                        matchStepDto.getStatisticDto().getGoals().x++;
                     } else {
                         matchStepDto.setFirstTeamBall(false);
                         stepLog += matchStepDto.getSecondPlayer().getName() + attackLog(attackFactor, addition);
@@ -267,6 +276,7 @@ public class MatchService {
 
     /**
      * play soft match between two teams
+     *
      * @param team1
      * @param team2
      * @return
@@ -280,11 +290,11 @@ public class MatchService {
         int position = 2;
         MatchStepDto step = new MatchStepDto();
 
-        for(int i = 0; i <= 90; i++) {
+        for (int i = 0; i <= 90; i++) {
             matchLog.append(i).append(" m: ").append(position).append(step.isFirstTeamBall()).append(" ");
-            step.setFirstTeamAction((int)(Math.random() * 3) + 1);
-            step.setSecondTeamAction((int)(Math.random() * 3) + 1);
-            if(position == 1) {
+            step.setFirstTeamAction((int) (Math.random() * 3) + 1);
+            step.setSecondTeamAction((int) (Math.random() * 3) + 1);
+            if (position == 1) {
                 step.setFirstPlayer(getRandomPlayerByType(firstTeam.getPlayers(), PlayerType.CD));
                 step.setSecondPlayer(getRandomPlayerByType(secondTeam.getPlayers(), PlayerType.ST));
                 if (!step.isFirstTeamBall()) {
@@ -324,8 +334,8 @@ public class MatchService {
                 step.setSecondPlayer(getRandomPlayerByType(secondTeam.getPlayers(), PlayerType.MD));
                 if (step.isFirstTeamBall()) {
                     if (step.getFirstTeamAction() == 1) {
-                        if (Math.random()*step.getFirstPlayer().getSpeed() * step.getFirstTeamChance() / 100
-                                > Math.random()*step.getSecondPlayer().getSpeed()) {
+                        if (Math.random() * step.getFirstPlayer().getSpeed() * step.getFirstTeamChance() / 100
+                                > Math.random() * step.getSecondPlayer().getSpeed()) {
                             matchLog.append(step.getFirstPlayer().getName()).append(" успешно прошол вперед<br>");
                             position = 3;
                         } else {
@@ -334,7 +344,7 @@ public class MatchService {
                         }
                     } else if (step.getFirstTeamAction() == 2) {
                         if (Math.random() * step.getFirstPlayer().getSkill() * step.getFirstTeamChance() / 100
-                                > Math.random() * step.getSecondPlayer().getSkill() * step.getSecondTeamChance() / 100 ) {
+                                > Math.random() * step.getSecondPlayer().getSkill() * step.getSecondTeamChance() / 100) {
                             step.plusChance(1);
                         } else {
                             step.setFirstTeamBall(false);
@@ -354,7 +364,7 @@ public class MatchService {
                 } else {
                     if (step.getSecondTeamAction() == 1) {
                         if (Math.random() * step.getSecondPlayer().getSpeed() * step.getSecondTeamChance() / 100
-                                > Math.random()*step.getFirstPlayer().getSpeed()) {
+                                > Math.random() * step.getFirstPlayer().getSpeed()) {
                             matchLog.append(step.getSecondPlayer().getName()).append(" успешно прошол вперед<br>");
                             position = 1;
                         } else {
@@ -363,7 +373,7 @@ public class MatchService {
                         }
                     } else if (step.getSecondTeamAction() == 2) {
                         if (Math.random() * step.getSecondPlayer().getSkill() * step.getSecondTeamChance() / 100
-                                > Math.random() * step.getFirstPlayer().getSkill() * step.getFirstTeamChance() / 100 ) {
+                                > Math.random() * step.getFirstPlayer().getSkill() * step.getFirstTeamChance() / 100) {
                             step.plusChance(2);
                         } else {
                             step.setFirstTeamBall(true);
@@ -409,23 +419,44 @@ public class MatchService {
                 } else {
                     if (step.getSecondTeamAction() == 1 || step.getSecondTeamAction() == 2) {
                         matchLog.append(step.getSecondPlayer().getName()).append(" выбивает мяч <br>");
-                            position = 2;
-                        } else {
+                        position = 2;
+                    } else {
                         matchLog.append(step.getSecondPlayer().getName()).append(" делает пас <br>");
                         position = 3;
                         step.plusChance(2);
                     }
-                    }
                 }
+            }
         }
         matchLog.append("Матч закончился! ").append(firstTeam.getTeam().getName())
                 .append(" ").append(step.showGoals()).append(" ").append(secondTeam.getTeam().getName()).append("<br>");
         return matchLog.toString();
     }
 
+    @Transactional
+    @Scheduled(cron = "5 12 15 * * *")
+    public void playAllCreatedMatchesAfterToday() {
+        List<MatchPlay> matchPlayList = matchRepository.getAllFromPlayInLeague(LocalDate.now());
+        MatchDto matchDto;
+        MatchStepDto matchStepDto;
+        // clear all matches in server
+        matchStepDtos.clear();
+        matchRepository.resetAllMatches();
+
+        for (MatchPlay matchPlay : matchPlayList) {
+            matchDto = startMatchWithPC(matchPlay.getFirstTeamId(), matchPlay.getSecondTeamId());
+            matchStepDto = makeStepWithCPU(matchDto.getMatchId(), randomizeActionByTeamChance(50));
+            while (!matchStepDto.getLastStepLog().equals(matchStepDto.showGoals())) {
+                matchStepDto = makeStepWithCPU(matchDto.getMatchId(), randomizeActionByTeamChance(matchStepDto.getFirstTeamChance()));
+            }
+            System.out.println(matchStepDto.showGoals());
+        }
+
+    }
+
     private Player getRandomPlayerByType(List<Player> players, PlayerType type) {
         List<Player> filtered = players.stream().filter(player -> player.getType() == type).collect(Collectors.toList());
-        return filtered.get((int)(Math.random() * filtered.size()));
+        return filtered.get((int) (Math.random() * filtered.size()));
     }
 
     private MatchStepDto getMatchStepDtoById(Long id) {
@@ -463,5 +494,17 @@ public class MatchService {
             }
         }
         return "";
+    }
+
+    private int randomizeActionByTeamChance(int teamChance) {
+        double teamActionRandom = Math.random() * 100;
+
+        // magic cpu randomise algorithm allowed by chance
+        if (teamChance > 75)
+            return teamActionRandom > 20 ? 1 : teamActionRandom < 10 ? 2 : 3;
+        else if (teamChance < 40)
+            return teamActionRandom > 80 ? 1 : teamActionRandom < 35 ? 2 : 3;
+        else
+            return teamActionRandom > 65 ? 1 : teamActionRandom < 30 ? 2 : 3;
     }
 }

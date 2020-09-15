@@ -2,13 +2,13 @@ package site.fifa.repository;
 
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
-import site.fifa.entity.Player;
+import site.fifa.entity.Statistic;
 
 import java.util.List;
 
 @Repository
-public interface PlayerRepository extends CrudRepository<Player, Long> {
+public interface StatisticRepository extends CrudRepository<Statistic, Long> {
 
-    List<Player> getByTeamId(Long teamId);
+    List<Statistic> getByMatchId(Long matchId);
 
 }
