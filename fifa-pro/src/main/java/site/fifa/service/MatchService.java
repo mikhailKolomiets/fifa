@@ -8,16 +8,19 @@ import site.fifa.dto.MatchDto;
 import site.fifa.dto.MatchStepDto;
 import site.fifa.dto.PlaySide;
 import site.fifa.dto.TeamDTO;
+import site.fifa.entity.LeagueTableItem;
 import site.fifa.entity.Player;
 import site.fifa.entity.PlayerType;
 import site.fifa.entity.Statistic;
 import site.fifa.entity.match.MatchPlay;
 import site.fifa.entity.match.MatchStatus;
 import site.fifa.entity.match.MatchType;
+import site.fifa.repository.LeagueTableItemRepository;
 import site.fifa.repository.MatchRepository;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,6 +33,8 @@ public class MatchService {
     private MatchRepository matchRepository;
     @Autowired
     private StatisticService statisticService;
+    @Autowired
+    private LeagueTableItemRepository leagueTableItemRepository;
 
     private static ArrayList<MatchStepDto> matchStepDtos = new ArrayList<>();
 
@@ -64,6 +69,7 @@ public class MatchService {
             if (!statisticService.isExistByMatchId(matchId)) {
                 statisticService.saveStatistic(new Statistic(matchId, matchStepDto.getStatisticDto()));
                 matchRepository.updateMatchStatusById(MatchStatus.FINISHED, matchId);
+                updateLeagueTable(matchStepDto);
             }
             return matchStepDto;
         }
@@ -506,5 +512,26 @@ public class MatchService {
             return teamActionRandom > 80 ? 1 : teamActionRandom < 35 ? 2 : 3;
         else
             return teamActionRandom > 65 ? 1 : teamActionRandom < 30 ? 2 : 3;
+    }
+
+    private void updateLeagueTable(MatchStepDto matchStepDto) {
+        MatchPlay matchPlay = matchRepository.findById(matchStepDto.getMatchDto().getMatchId()).orElse(null);
+        if (matchPlay == null || matchPlay.getType() != MatchType.LEAGUE)
+            return;
+        int f = matchStepDto.getGoalFirstTeam();
+        int s = matchStepDto.getGoalSecondTeam();
+        leagueTableItemRepository.increaseDataForLeagueTable(f > s ? 1 : 0, f < s ? 1 : 0, f == s ? 1 : 0, f, s, f > s ? 3 : f == s ? 1 : 0,
+                matchStepDto.getMatchDto().getFirstTeam().getTeam().getId(), matchStepDto.getMatchDto().getFirstTeam().getTeam().getLeagueId()
+                );
+        leagueTableItemRepository.increaseDataForLeagueTable(f < s ? 1 : 0, f > s ? 1 : 0, f == s ? 1 : 0, s, f, f > s ? 0 : f == s ? 1 : 3,
+                matchStepDto.getMatchDto().getSecondTeam().getTeam().getId(), matchStepDto.getMatchDto().getFirstTeam().getTeam().getLeagueId()
+        );
+
+        List<LeagueTableItem> leagueTableItems = leagueTableItemRepository.getByLeagueId(matchStepDto.getMatchDto().getFirstTeam().getTeam().getLeagueId());
+        leagueTableItems.sort(Comparator.comparingInt(LeagueTableItem::getPoint).reversed());
+        int i = 0;
+        for (LeagueTableItem l : leagueTableItems) {
+            leagueTableItemRepository.updatePosition(++i, l.getId());
+        }
     }
 }

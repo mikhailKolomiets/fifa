@@ -4,16 +4,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import site.fifa.entity.Country;
-import site.fifa.entity.League;
-import site.fifa.entity.Team;
+import site.fifa.dto.LeagueTableItemDto;
+import site.fifa.entity.*;
 import site.fifa.entity.match.MatchPlay;
 import site.fifa.entity.match.MatchStatus;
 import site.fifa.entity.match.MatchType;
-import site.fifa.repository.CountryRepository;
-import site.fifa.repository.LeagueRepository;
-import site.fifa.repository.MatchRepository;
-import site.fifa.repository.TeamRepository;
+import site.fifa.repository.*;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -30,6 +26,10 @@ public class LeagueService {
     private LeagueRepository leagueRepository;
     @Autowired
     private MatchRepository matchRepository;
+    @Autowired
+    private StatisticRepository statisticRepository;
+    @Autowired
+    private LeagueTableItemRepository leagueTableItemRepository;
 
     /**
      * Every friday check start leagues in the all countries.
@@ -51,7 +51,10 @@ public class LeagueService {
 
             System.out.println("Create league with id " + league.getId());
 
-            countryTeams.forEach(team -> teamRepository.changeLeagueIdById(league.getId(), team.getId()));
+            countryTeams.forEach(team -> {
+                teamRepository.changeLeagueIdById(league.getId(), team.getId());
+                leagueTableItemRepository.save(new LeagueTableItem(league.getId(), team.getId()));
+            });
             matchRepository.saveAll(scheduledLeagueGames(league.getId()));
         }
     }
@@ -143,6 +146,22 @@ public class LeagueService {
         }
 
         result.addAll(matchPlays);
+
+        return result;
+    }
+
+    /**
+     * Get List of league items that represent the teams of league
+     * @param leagueId
+     * @return
+     */
+    public List<LeagueTableItemDto> getLeagueTableById(Long leagueId) {
+        List<LeagueTableItem> leagueTableItems = leagueTableItemRepository.getByLeagueId(leagueId);
+        List<LeagueTableItemDto> result = new ArrayList<>();
+
+        for (LeagueTableItem l : leagueTableItems) {
+            result.add(new LeagueTableItemDto(l, teamRepository.findById(l.getTeamId()).orElse(null)));
+        }
 
         return result;
     }

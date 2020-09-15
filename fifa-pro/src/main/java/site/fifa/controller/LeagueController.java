@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import site.fifa.dto.LeagueTableItemDto;
 import site.fifa.entity.match.MatchPlay;
 import site.fifa.service.LeagueService;
 
@@ -27,6 +28,11 @@ public class LeagueController {
     @RequestMapping("start")
     public void startLeague() {
         leagueService.startLeagues();
+    }
+
+    @RequestMapping("get-table/{leagueId}")
+    public List<LeagueTableItemDto> getLeagueTableByLeagueId(@PathVariable Long leagueId) {
+        return leagueService.getLeagueTableById(leagueId);
     }
 
 }
