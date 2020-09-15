@@ -28,4 +28,10 @@ public class MatchController {
 
     }
 
+    // TODO: 9/15/20 test
+    @RequestMapping("get-for-league")
+    public void startLeague() {
+        matchService.playAllCreatedMatchesAfterToday();
+    }
+
 }

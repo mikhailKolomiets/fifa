@@ -51,7 +51,6 @@ public class LeagueService {
 
             System.out.println("Create league with id " + league.getId());
 
-            //todo refactor by repository layer
             countryTeams.forEach(team -> teamRepository.changeLeagueIdById(league.getId(), team.getId()));
             matchRepository.saveAll(scheduledLeagueGames(league.getId()));
         }
@@ -72,8 +71,9 @@ public class LeagueService {
 
     /**
      * Scheduling game for country league
+     *
      * @param matchPlays - all possible games between all teams in league
-     * @param teams - amount teams in league
+     * @param teams      - amount teams in league
      * @return
      */
     private List<MatchPlay> schedulingGame(List<MatchPlay> matchPlays, int teams) {
@@ -97,7 +97,7 @@ public class LeagueService {
         }
 
         while (matchPlays.size() > 0) {
-            date = date.plusDays(1); // easy schedule todo
+            date = date.plusDays(1);
             playDaysHalfLeague++;
 
             for (int j = 0; j < teams / 2; j++) {
