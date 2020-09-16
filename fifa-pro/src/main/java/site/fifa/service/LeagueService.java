@@ -43,6 +43,7 @@ public class LeagueService {
 
     private void startLeagueByCountry(Country country) {
         // todo check if the league is finished
+
         System.out.println("attempt to create league for " + country.getCountryName());
         List<Team> countryTeams = teamRepository.getByCountryAndLeagueIdIsNull(new Country(country.getCountryId()));
         countryTeams = countryTeams.stream().filter(team -> team.getLeagueId() == null).collect(Collectors.toList());
