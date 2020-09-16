@@ -24,7 +24,34 @@ hideAll();
                                     value: data[team].id,
                                     text:  data[team].name
                                 }));
+                                //$("#league-games").text("play league")
                             }
+                                $.ajax({
+                                    url: 'match/get-for-league-games',
+                                    success: function (games) {
+                                        if (games.length > 0) {
+                                        $("#league-game-1").text(games[0].firstTeam.team.name + " - " + games[0].secondTeam.team.name).click(function() {
+                                                    localStorage.setItem("team1", games[0].firstTeam.team.id);
+                                                    localStorage.setItem("team2", games[0].secondTeam.team.id);
+                                                    window.location.href = "match.html";
+                                        })
+                                        }
+                                        if (games.length > 1) {
+                                            $("#league-game-2").text(games[1].firstTeam.team.name + " - " + games[1].secondTeam.team.name).click(function() {
+                                                   localStorage.setItem("team1", games[1].firstTeam.team.id);
+                                                    localStorage.setItem("team2", games[1].secondTeam.team.id);
+                                                    window.location.href = "match.html";
+                                        })
+                                        }
+                                       if (games.length > 2) {
+                                         $("#league-game-3").text(games[2].firstTeam.team.name + " - " + games[2].secondTeam.team.name).click(function() {
+                                                     localStorage.setItem("team1", games[2].firstTeam.team.id);
+                                                     localStorage.setItem("team2", games[2].secondTeam.team.id);
+                                                     window.location.href = "match.html";
+                                         })
+                                         }
+                                    }
+                                });
                         }
                     }
          });

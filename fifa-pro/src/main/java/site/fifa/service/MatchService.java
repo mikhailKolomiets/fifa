@@ -457,7 +457,15 @@ public class MatchService {
             }
             System.out.println(matchStepDto.showGoals());
         }
+    }
 
+    public List<MatchDto> getMatchesForPlayLeaguesGame() {
+        List<MatchDto> result = new ArrayList<>();
+        List<MatchPlay> matchPlays = matchRepository.getForLeaguePlay();
+        for (MatchPlay m : matchPlays) {
+            result.add(new MatchDto(m.getId(), PlaySide.CPU, teamService.getTeamById(m.getFirstTeamId()), teamService.getTeamById(m.getSecondTeamId())));
+        }
+        return result;
     }
 
     private Player getRandomPlayerByType(List<Player> players, PlayerType type) {
