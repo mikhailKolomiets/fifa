@@ -25,4 +25,7 @@ public interface MatchRepository extends CrudRepository<MatchPlay, Long> {
     @Query("select mp from MatchPlay mp where mp.type = 1 and mp.status <> 2 and mp.started < :startdate")
     List<MatchPlay> getAllFromPlayInLeague(@Param("startdate") LocalDate date);
 
+    @Query(nativeQuery = true, value = "select * from match_play mp where mp.type = 1 and mp.status = 0 order by mp.started limit 3")
+    List<MatchPlay> getForLeaguePlay();
+
 }

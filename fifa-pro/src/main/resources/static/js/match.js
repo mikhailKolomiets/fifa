@@ -3,6 +3,7 @@ action1 = $("#action1");
 action2 = $("#action2");
 action3 = $("#action3");
 statusMatch = $("#match-status");
+mpr = $("#main-page-ref");
 
     $.ajax({
         url: '/match/start/' + localStorage.getItem("team1") + "/" + localStorage.getItem("team2"),
@@ -15,6 +16,7 @@ statusMatch = $("#match-status");
                             action1.text('Атаковать');
                             action2.text('Укрепиться в центре');
                             action3.text('Пас назад');
+                            mpr.hide()
         }
     });
 
@@ -26,6 +28,9 @@ statusMatch = $("#match-status");
                                     $("#match-status").html(getLog(data));
                                     $("#title-change").text(data.matchDto.firstTeam.team.name + " " + data.goalFirstTeam + ":" + data.goalSecondTeam +
                                         " " + data.matchDto.secondTeam.team.name);
+                                        if (data.step > 90 && data.additionTime < 0) {
+                                            mpr.show();
+                                        }
                                 }
                             });
     });
@@ -38,6 +43,9 @@ statusMatch = $("#match-status");
                                     $("#match-status").html(getLog(data));
                                     $("#title-change").text(data.matchDto.firstTeam.team.name + " " + data.goalFirstTeam + ":" + data.goalSecondTeam +
                                          " " + data.matchDto.secondTeam.team.name);
+                                                                                 if (data.step > 90 && data.additionTime < 0) {
+                                                                                     mpr.show();
+                                                                                 }
                                 }
                             });
     });
@@ -50,6 +58,9 @@ statusMatch = $("#match-status");
                                     $("#match-status").html(getLog(data));
                                     $("#title-change").text(data.matchDto.firstTeam.team.name + " " + data.goalFirstTeam + ":" + data.goalSecondTeam +
                                         " " + data.matchDto.secondTeam.team.name);
+                                                                                if (data.step > 90 && data.additionTime < 0) {
+                                                                                    mpr.show();
+                                                                                }
                                 }
                             });
     });
