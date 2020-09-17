@@ -1,10 +1,9 @@
 package site.fifa.controller;
 
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import site.fifa.dto.NewTeamCreateRequest;
 import site.fifa.dto.TeamDTO;
 import site.fifa.entity.Team;
@@ -23,21 +22,14 @@ public class TeamController {
     @Autowired
     private MatchService matchService;
 
-    @RequestMapping("get-team")
+    @ApiResponses({@ApiResponse(code = 200, message = "Return all teams for all countries")})
+    @GetMapping("get-team")
     public List<Team> getTeamForPlay() {
         return teamService.getTeams();
     }
 
-    @RequestMapping("play")
-    public String playQuickMatch() {
-        return matchService.playAutoMatch(4L, 5L);
-    }
 
-    /**
-     *
-     * @param
-     * @return null if team with name is present
-     */
+    @ApiResponses({@ApiResponse(code = 200, message = "Return created team or null if name is busy")})
     @PostMapping(value = "create", headers = "Accept=*/*", produces = "application/json", consumes="application/json")
     public TeamDTO createTeam(@RequestBody NewTeamCreateRequest request) {
 
