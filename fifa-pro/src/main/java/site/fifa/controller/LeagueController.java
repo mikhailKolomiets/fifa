@@ -1,6 +1,9 @@
 package site.fifa.controller;
 
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,19 +21,22 @@ public class LeagueController {
     private LeagueService leagueService;
 
     // todo remove after test
-    @RequestMapping("generate-league/{countryId}")
+    @ApiResponses({@ApiResponse(code = 200, message = "Create league with 5 - 25 teams in country")})
+    @GetMapping("generate-league/{countryId}")
     public List<MatchPlay> generateLeagueByCountryId(@PathVariable Long countryId) {
 
         return leagueService.scheduledLeagueGames(countryId);
     }
 
     // todo remove after test
-    @RequestMapping("start")
+    @ApiResponses({@ApiResponse(code = 200, message = "Try to start all leagues")})
+    @GetMapping("start")
     public void startLeague() {
         leagueService.startLeagues();
     }
 
-    @RequestMapping("get-table/{leagueId}")
+    @ApiResponses({@ApiResponse(code = 200, message = "Return league table")})
+    @GetMapping("get-table/{leagueId}")
     public List<LeagueTableItemDto> getLeagueTableByLeagueId(@PathVariable Long leagueId) {
         return leagueService.getLeagueTableById(leagueId);
     }
