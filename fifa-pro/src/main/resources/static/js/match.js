@@ -4,6 +4,7 @@ action2 = $("#action2");
 action3 = $("#action3");
 statusMatch = $("#match-status");
 mpr = $("#main-page-ref");
+ballPosition = 500;
 
     $.ajax({
         url: '/match/start/' + localStorage.getItem("team1") + "/" + localStorage.getItem("team2"),
@@ -85,16 +86,19 @@ mpr = $("#main-page-ref");
 
         if (data.firstTeamBall) {
             if (data.position == 2) {
+            ballPosition = 500;
                 result = ". . . 0 -> . . .";
                 action1.text('Атаковать');
                 action2.text('Укрепиться в центре');
                 action3.text('Пас назад');
             } else if (data.position == 1) {
+                ballPosition = 200;
                 result = "0 -> . . . . . .";
                 action1.text('Выбить в центр');
                 action2.text('Пас');
                 action3.text('Пас');
             } else if (data.position == 3) {
+            ballPosition = 950;
                 result = ". . . . . . 0 ->";
                 action1.text('Удар по воротам');
                 action2.text('Подойти поближе');
@@ -102,23 +106,26 @@ mpr = $("#main-page-ref");
             }
         } else {
             if (data.position == 2) {
+            ballPosition = 550;
                    result = ". . . <- 0 . . .";
                 action1.text('Не пропускать');
                 action2.text('Пытаться забрать мяч');
                 action3.text('Блокировать передачи');
             } else if (data.position == 1) {
+            ballPosition = 100;
                    result = "<- 0 . . . . . .";
                 action1.text('Усиление вратаря');
                 action2.text('Отбор');
                 action3.text('Блок передач');
             } else if (data.position == 3) {
+            ballPosition = 850;
                    result = ". . . . . . <- 0";
                 action1.text('Не давать вынос');
                 action2.text('Отбор');
                 action3.text('Отбор');
             }
         }
-
+$(".ball-go").animate({left: ballPosition});
         $("#show-area").text(result);
     }
 })
