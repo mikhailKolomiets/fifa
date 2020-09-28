@@ -42,10 +42,12 @@ public class LeagueService {
     }
 
     private void startLeagueByCountry(Country country) {
-        // todo check if the league is finished
+        //check if the league is finished
+        resetLeaguesForTeamsIfLeaguesIsEnd(country);
 
         System.out.println("attempt to create league for " + country.getCountryName());
         List<Team> countryTeams = teamRepository.getByCountryAndLeagueIdIsNull(new Country(country.getCountryId()));
+
         countryTeams = countryTeams.stream().filter(team -> team.getLeagueId() == null).collect(Collectors.toList());
         if (countryTeams.size() > 4 && countryTeams.size() < 26) {
             League league = leagueRepository.save(new League(null, country.getCountryName() + " league", country));
@@ -71,6 +73,10 @@ public class LeagueService {
         }
 
         return schedulingGame(matchPlays, teams.size());
+    }
+
+    public List<League> getLeaguesByCountryId(Long countryId) {
+        return leagueRepository.getByCountryIfPresent(countryId);
     }
 
     /**
@@ -165,6 +171,17 @@ public class LeagueService {
         }
 
         return result;
+    }
+
+    private void resetLeaguesForTeamsIfLeaguesIsEnd(Country country) {
+
+        List<League> countryLeagues = leagueRepository.getByCountryIfPresent(country.getCountryId());
+
+        for (League l : countryLeagues) {
+            if (matchRepository.getNextMatchesInLeague(l.getId()).size() == 0) {
+                teamRepository.resetAllTeamsInLeague(l.getId());
+            }
+        }
     }
 
 }

@@ -1,0 +1,8 @@
+.red {
+    color : red
+}
+.ball-go {
+    position:absolute;
+    left: 500px;
+    top: 300px;
+}
