@@ -85,47 +85,50 @@ ballPosition = 500;
         result = "";
 
         if (data.firstTeamBall) {
+        $("#playerName").text(data.firstPlayer.name);
             if (data.position == 2) {
-            ballPosition = 500;
+            //ballPosition = 500;
                 result = ". . . 0 -> . . .";
                 action1.text('Атаковать');
                 action2.text('Укрепиться в центре');
                 action3.text('Пас назад');
             } else if (data.position == 1) {
-                ballPosition = 200;
+                //ballPosition = 200;
                 result = "0 -> . . . . . .";
                 action1.text('Выбить в центр');
                 action2.text('Пас');
                 action3.text('Пас');
             } else if (data.position == 3) {
-            ballPosition = 950;
+            //ballPosition = 950;
                 result = ". . . . . . 0 ->";
                 action1.text('Удар по воротам');
                 action2.text('Подойти поближе');
                 action3.text('Пас назад');
             }
         } else {
+        $("#playerName").text(data.secondPlayer.name);
             if (data.position == 2) {
-            ballPosition = 550;
+            //ballPosition = 550;
                    result = ". . . <- 0 . . .";
                 action1.text('Не пропускать');
                 action2.text('Пытаться забрать мяч');
                 action3.text('Блокировать передачи');
             } else if (data.position == 1) {
-            ballPosition = 100;
+            //ballPosition = 100;
                    result = "<- 0 . . . . . .";
                 action1.text('Усиление вратаря');
                 action2.text('Отбор');
                 action3.text('Блок передач');
             } else if (data.position == 3) {
-            ballPosition = 850;
+            //ballPosition = 850;
                    result = ". . . . . . <- 0";
                 action1.text('Не давать вынос');
                 action2.text('Отбор');
                 action3.text('Отбор');
             }
         }
-$(".ball-go").animate({left: ballPosition});
+
+        $(".ball-go").animate({left: data.ballPosition.x, top: data.ballPosition.y});
         $("#show-area").text(result);
     }
 })

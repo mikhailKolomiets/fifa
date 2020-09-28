@@ -1,8 +1,12 @@
+body {
+  background-color: #F5F5F5;
+}
+
 .red {
     color : red
 }
 .ball-go {
     position:absolute;
     left: 500px;
-    top: 300px;
+    top: 270px;
 }

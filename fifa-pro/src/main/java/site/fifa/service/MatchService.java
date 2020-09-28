@@ -18,6 +18,7 @@ import site.fifa.entity.match.MatchType;
 import site.fifa.repository.LeagueTableItemRepository;
 import site.fifa.repository.MatchRepository;
 
+import java.awt.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -50,6 +51,8 @@ public class MatchService {
 
         MatchStepDto matchStepDto = new MatchStepDto();
         matchStepDto.setMatchDto(new MatchDto(match.getId(), PlaySide.CPU, teamService.getTeamById(firstTeamId), teamService.getTeamById(secondTeamId)));
+        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
+        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
         matchStepDtos.add(matchStepDto);
         return matchStepDto.getMatchDto();
     }
@@ -62,6 +65,7 @@ public class MatchService {
         matchStepDto.getStatisticDto().countPercentageByTeamHold(matchStepDto.isFirstTeamBall());
         String stepLog = matchStepDto.getStep() + " м: ";
         double attackFactor;
+        boolean startPointBall = false;
 
         if (matchStepDto.getStep() > 90 && matchStepDto.getAdditionTime() < 0) {
             matchStepDto.setLastStepLog(matchStepDto.showGoals());
@@ -91,7 +95,10 @@ public class MatchService {
                 matchStepDto.setAdditionTime(-1);
                 matchStepDto.setFirstTeamBall(false);
                 matchStepDto.setPosition(2);
-                stepLog = "Второй тайм!";
+                matchStepDto.setLastStepLog("Второй тайм!");
+                matchStepDto.getLog().add(matchStepDto.getLastStepLog());
+                updateBallCoordinate(matchStepDto, true);
+                return matchStepDto;
             }
         }
 
@@ -103,8 +110,8 @@ public class MatchService {
         matchStepDto.setSecondTeamAction(randomizeActionByTeamChance(matchStepDto.getFirstTeamChance()));
 
         if (matchStepDto.getPosition() == 1) {
-            matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.CD));
-            matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.ST));
+            //matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.CD));
+            //matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.ST));
             if (matchStepDto.isFirstTeamBall()) {
                 addition = matchStepDto.getSecondTeamAction() == action ? 15 : 0;
                 if (action == 1) {
@@ -112,6 +119,8 @@ public class MatchService {
                     if (Math.random() * matchStepDto.getFirstPlayer().getSkill()
                             > Math.random() * matchStepDto.getSecondPlayer().getSkill() * (matchStepDto.getSecondTeamChance() + addition) / 100) {
                         stepLog += matchStepDto.getFirstPlayer().getName() + " выбивает мяч";
+                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
+                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                     } else {
                         matchStepDto.setFirstTeamBall(false);
                         stepLog += matchStepDto.getSecondPlayer().getName() + " забирает мяч";
@@ -121,8 +130,12 @@ public class MatchService {
                     if (Math.random() * 100 < Math.random() * matchStepDto.getFirstTeamChance()) {
                         matchStepDto.setPosition(2);
                         stepLog += matchStepDto.getFirstPlayer().getName() + " выбивает мяч";
+                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
+                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                     } else {
                         stepLog += matchStepDto.getFirstPlayer().getName() + " держит мяч";
+                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.CD));
+                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.ST));
                     }
                 }
             } else {
@@ -138,6 +151,9 @@ public class MatchService {
                         matchStepDto.increaseGoal(2);
                         stepLog += matchStepDto.getSecondPlayer().getName() + attackLog(attackFactor, addition) + matchStepDto.showGoals();
                         matchStepDto.getStatisticDto().getGoals().y++;
+                        startPointBall = true;
+                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
+                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                     } else {
                         matchStepDto.setFirstTeamBall(true);
                         stepLog += matchStepDto.getFirstPlayer().getName() + attackLog(attackFactor, addition);
@@ -147,21 +163,23 @@ public class MatchService {
                             > Math.random() * matchStepDto.getFirstPlayer().getSkill() * matchStepDto.getFirstTeamChance() / 100) {
                         matchStepDto.plusChance(2);
                         stepLog += matchStepDto.getSecondPlayer().getName() + " обводит " + matchStepDto.getFirstPlayer().getName();
+                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.CD));
                     } else {
                         matchStepDto.setFirstTeamBall(true);
                         stepLog += matchStepDto.getSecondPlayer().getName() + " теряет мяч";
+                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.ST));
                     }
                 } else if (matchStepDto.getSecondTeamAction() == 3) {
                     matchStepDto.setPosition(2);
                     matchStepDto.plusChance(2);
                     matchStepDto.minusChance(1);
                     stepLog += matchStepDto.getSecondPlayer().getName() + " делает пас назад";
+                    matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
+                    matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                 }
             }
         } else if (matchStepDto.getPosition() == 2) {
 
-            matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
-            matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
             addition = matchStepDto.getSecondTeamAction() == action ? 25 : 0;
             if (matchStepDto.isFirstTeamBall()) {
                 if (action == 1) {
@@ -169,7 +187,9 @@ public class MatchService {
                             > Math.random() * matchStepDto.getSecondPlayer().getSpeed() * (matchStepDto.getSecondTeamChance() + addition) / 100) {
                         matchStepDto.setPosition(3);
                         matchStepDto.minusChance(1);
-                        stepLog += matchStepDto.getFirstPlayer().getName() + " проходит вперед";
+                        stepLog += matchStepDto.getFirstPlayer().getName() + " передает пас вперед вперед";
+                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.ST));
+                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.CD));
                     } else {
                         matchStepDto.setFirstTeamBall(false);
                         stepLog += matchStepDto.getFirstPlayer().getName() + " теряет мяч";
@@ -179,15 +199,20 @@ public class MatchService {
                             > Math.random() * matchStepDto.getSecondPlayer().getSkill() * matchStepDto.getSecondTeamChance() / 100) {
                         matchStepDto.plusChance(1);
                         stepLog += matchStepDto.getFirstPlayer().getName() + " укрепляет позицию";
+                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
+                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                     } else {
                         matchStepDto.setFirstTeamBall(false);
                         stepLog += matchStepDto.getFirstPlayer().getName() + " теряет мяч";
+                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
                     }
                 } else if (action == 3) {
                     matchStepDto.setPosition(1);
                     matchStepDto.plusChance(1);
                     matchStepDto.minusChance(2);
                     stepLog += matchStepDto.getFirstPlayer().getName() + " делает пас назад";
+                    matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.CD));
+                    matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.ST));
                 }
             } else {
                 if (matchStepDto.getSecondTeamAction() == 1) {
@@ -195,31 +220,37 @@ public class MatchService {
                             > Math.random() * matchStepDto.getFirstPlayer().getSpeed() * (matchStepDto.getFirstTeamChance() + addition) / 100) {
                         matchStepDto.setPosition(1);
                         matchStepDto.minusChance(2);
-                        stepLog += matchStepDto.getSecondPlayer().getName() + " проходит вперед";
+                        stepLog += matchStepDto.getSecondPlayer().getName() + " передает мяч вперед";
+                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.CD));
+                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.ST));
                     } else {
                         matchStepDto.setFirstTeamBall(true);
                         stepLog += matchStepDto.getSecondPlayer().getName() + " теряет мяч";
+                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                     }
                 } else if (matchStepDto.getSecondTeamAction() == 2) {
                     if (Math.random() * matchStepDto.getSecondPlayer().getSkill()
                             > Math.random() * matchStepDto.getFirstPlayer().getSkill() * matchStepDto.getFirstTeamChance() / 100) {
                         matchStepDto.plusChance(2);
                         stepLog += matchStepDto.getSecondPlayer().getName() + " укрепляет позицию";
+                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
+                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                     } else {
                         matchStepDto.setFirstTeamBall(true);
                         stepLog += matchStepDto.getSecondPlayer().getName() + " теряет мяч";
+                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
                     }
                 } else if (matchStepDto.getSecondTeamAction() == 3) {
                     matchStepDto.setPosition(3);
                     matchStepDto.plusChance(2);
                     matchStepDto.minusChance(1);
                     stepLog += matchStepDto.getSecondPlayer().getName() + " делает пас назад";
+                    matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.ST));
+                    matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.CD));
                 }
             }
         } else if (matchStepDto.getPosition() == 3) {
 
-            matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.ST));
-            matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.CD));
             if (!matchStepDto.isFirstTeamBall()) {
                 addition = matchStepDto.getSecondTeamAction() == action ? 15 : 0;
                 if (matchStepDto.getSecondTeamAction() == 1) {
@@ -227,17 +258,24 @@ public class MatchService {
                     if (Math.random() * matchStepDto.getSecondPlayer().getSkill()
                             > Math.random() * matchStepDto.getFirstPlayer().getSkill() * (matchStepDto.getFirstTeamChance() + addition) / 100) {
                         stepLog += matchStepDto.getSecondPlayer().getName() + " выбивает мяч";
+                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
+                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                     } else {
                         matchStepDto.setFirstTeamBall(true);
                         stepLog += matchStepDto.getFirstPlayer().getName() + " забирает мяч";
+                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.CD));
                     }
                 } else if (matchStepDto.getSecondTeamAction() == 2 || matchStepDto.getSecondTeamAction() == 3) {
                     matchStepDto.plusChance(2);
                     if (Math.random() * 100 < Math.random() * matchStepDto.getSecondTeamChance()) {
                         matchStepDto.setPosition(2);
                         stepLog += matchStepDto.getSecondPlayer().getName() + " выбивает мяч";
+                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
+                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                     } else {
                         stepLog += matchStepDto.getSecondPlayer().getName() + " держит мяч";
+                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.ST));
+                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.CD));
                     }
                 }
             } else {
@@ -253,6 +291,9 @@ public class MatchService {
                         matchStepDto.increaseGoal(1);
                         stepLog += matchStepDto.getFirstPlayer().getName() + attackLog(attackFactor, addition) + matchStepDto.showGoals();
                         matchStepDto.getStatisticDto().getGoals().x++;
+                        startPointBall = true;
+                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
+                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                     } else {
                         matchStepDto.setFirstTeamBall(false);
                         stepLog += matchStepDto.getSecondPlayer().getName() + attackLog(attackFactor, addition);
@@ -261,20 +302,25 @@ public class MatchService {
                     if (Math.random() * matchStepDto.getFirstPlayer().getSkill() * matchStepDto.getFirstTeamChance() / 100
                             > Math.random() * matchStepDto.getSecondPlayer().getSkill() * matchStepDto.getSecondTeamChance() / 100) {
                         matchStepDto.plusChance(1);
-                        stepLog += matchStepDto.getFirstPlayer() + " обводит " + matchStepDto.getSecondPlayer().getName();
+                        stepLog += matchStepDto.getFirstPlayer().getName() + " обводит " + matchStepDto.getSecondPlayer().getName();
+                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.CD));
                     } else {
                         matchStepDto.setFirstTeamBall(false);
                         stepLog += matchStepDto.getFirstPlayer().getName() + " теряет мяч";
+                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.ST));
                     }
                 } else if (action == 3) {
                     matchStepDto.setPosition(2);
                     matchStepDto.plusChance(1);
                     matchStepDto.minusChance(2);
                     stepLog += matchStepDto.getFirstPlayer().getName() + " делает пас назад";
+                    matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
+                    matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                 }
             }
         }
 
+        updateBallCoordinate(matchStepDto, startPointBall);
         matchStepDto.setLastStepLog(stepLog);
         matchStepDto.getLog().add(matchStepDto.getLastStepLog());
         return matchStepDto;
@@ -540,6 +586,113 @@ public class MatchService {
         int i = 0;
         for (LeagueTableItem l : leagueTableItems) {
             leagueTableItemRepository.updatePosition(++i, l.getId());
+        }
+    }
+
+    private void updateBallCoordinate(MatchStepDto matchStepDto, boolean startPoint) {
+        Point point = matchStepDto.getBallPosition();
+
+        if (startPoint) {
+            point.x = matchStepDto.isFirstTeamBall() ? 500 : 550;
+            point.y = 270;
+            return;
+        }
+
+        if (matchStepDto.isFirstTeamBall()) {
+
+            switch (matchStepDto.getMatchDto().getFirstTeam().getPlayers().indexOf(matchStepDto.getFirstPlayer())) {
+                case 0: // GK
+                    point.x = 100;
+                    point.y = 270;
+                    break;
+                case 1: // CD
+                    point.x = 200;
+                    point.y = 330;
+                    break;
+                case 2:
+                    point.x = 200;
+                    point.y = 450;
+                    break;
+                case 3:
+                    point.x = 200;
+                    point.y = 200;
+                    break;
+                case 4:
+                    point.x = 200;
+                    point.y = 60;
+                    break;
+                case 5: //MD
+                    point.x = 500;
+                    point.y = 270;
+                    break;
+                case 6: //st
+                    point.x = 950;
+                    point.y = 270;
+                    break;
+                case 7:
+                    point.x = 500;
+                    point.y = 120;
+                    break;
+                case 8:
+                    point.x = 950;
+                    point.y = 120;
+                    break;
+                case 9:
+                    point.x = 500;
+                    point.y = 420;
+                    break;
+                case 10:
+                    point.x = 950;
+                    point.y = 420;
+                    break;
+            }
+        } else {
+            switch (matchStepDto.getMatchDto().getSecondTeam().getPlayers().indexOf(matchStepDto.getSecondPlayer())) {
+                case 0: // GK
+                    point.x = 1050;
+                    point.y = 270;
+                    break;
+                case 1: // CD
+                    point.x = 950;
+                    point.y = 330;
+                    break;
+                case 2:
+                    point.x = 950;
+                    point.y = 450;
+                    break;
+                case 3:
+                    point.x = 950;
+                    point.y = 200;
+                    break;
+                case 4:
+                    point.x = 950;
+                    point.y = 60;
+                    break;
+                case 5: //MD
+                    point.x = 550;
+                    point.y = 270;
+                    break;
+                case 6: //st
+                    point.x = 200;
+                    point.y = 270;
+                    break;
+                case 7:
+                    point.x = 550;
+                    point.y = 120;
+                    break;
+                case 8:
+                    point.x = 200;
+                    point.y = 120;
+                    break;
+                case 9:
+                    point.x = 550;
+                    point.y = 420;
+                    break;
+                case 10:
+                    point.x = 200;
+                    point.y = 420;
+                    break;
+            }
         }
     }
 }
