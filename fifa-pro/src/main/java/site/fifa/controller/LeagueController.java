@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import site.fifa.dto.LeagueTableItemDto;
+import site.fifa.entity.League;
 import site.fifa.entity.match.MatchPlay;
 import site.fifa.service.LeagueService;
 
@@ -21,11 +22,17 @@ public class LeagueController {
     private LeagueService leagueService;
 
     // todo remove after test
-    @ApiResponses({@ApiResponse(code = 200, message = "Create league with 5 - 25 teams in country")})
+    @ApiResponses({@ApiResponse(code = 200, message = "Create league with 5 - 25 teams in country(test endpoint)")})
     @GetMapping("generate-league/{countryId}")
     public List<MatchPlay> generateLeagueByCountryId(@PathVariable Long countryId) {
 
         return leagueService.scheduledLeagueGames(countryId);
+    }
+
+    @ApiResponses({@ApiResponse(code = 200, message = "Return all leagues in the country")})
+    @GetMapping("leagues-by-country/{countryId}")
+    public List<League> getLeagueByCountryId(@PathVariable Long countryId) {
+        return leagueService.getLeaguesByCountryId(countryId);
     }
 
     // todo remove after test
