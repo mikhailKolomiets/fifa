@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import site.fifa.entity.Player;
 
+import java.awt.*;
 import java.util.ArrayList;
 
 @Data
@@ -26,6 +27,7 @@ public class MatchStepDto {
     private String lastStepLog = step + " m: Матч начался";
     private StatisticDto statisticDto = new StatisticDto();
     private ArrayList<String> log = new ArrayList<>();
+    private Point ballPosition = new Point();
 
     public void plusChance(int team) {
         if (team == 1 && firstTeamChance <= 100) {
