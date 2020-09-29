@@ -20,6 +20,8 @@ public interface LeagueTableItemRepository extends CrudRepository<LeagueTableIte
 
     List<LeagueTableItem> getByLeagueId(Long leagueId);
 
+    List<LeagueTableItem> getByLeagueIdAndTeamId(Long leagueId, Long teamId);
+
     @Modifying
     @Query("update LeagueTableItem l set l.position = :place where l.id = :id")
     void updatePosition(@Param("place") int place, @Param("id") Long id);

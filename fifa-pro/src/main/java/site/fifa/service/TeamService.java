@@ -4,11 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import site.fifa.dto.NewTeamCreateRequest;
 import site.fifa.dto.TeamDTO;
-import site.fifa.entity.Country;
-import site.fifa.entity.Player;
-import site.fifa.entity.PlayerType;
-import site.fifa.entity.Team;
+import site.fifa.entity.*;
 import site.fifa.repository.CountryRepository;
+import site.fifa.repository.LeagueTableItemRepository;
 import site.fifa.repository.TeamRepository;
 
 import java.util.ArrayList;
@@ -22,6 +20,7 @@ public class TeamService {
     private final TeamRepository teamRepository;
     private final CountryRepository countryRepository;
     private final PlayerService playerService;
+    private final LeagueTableItemRepository leagueTableItemRepository;
 
     public TeamDTO createNewTeam(NewTeamCreateRequest request) {
 
@@ -38,7 +37,7 @@ public class TeamService {
         team = teamRepository.save(team);
         makeTeamPlayers(team);
 
-        return new TeamDTO(team, playerService.getByTeamId(team.getId()));
+        return new TeamDTO(0, team, playerService.getByTeamId(team.getId()));
     }
 
     public List<Team> getTeams() {
@@ -48,7 +47,13 @@ public class TeamService {
     }
 
     public TeamDTO getTeamById(Long teamId) {
-        return new TeamDTO(teamRepository.findById(teamId).orElse(null), playerService.getByTeamId(teamId));
+        Team team = teamRepository.findById(teamId).orElse(null);
+        if (team == null) {
+            return null;
+        }
+        LeagueTableItem leagueTableItem = leagueTableItemRepository.getByLeagueIdAndTeamId(team.getLeagueId(), teamId).stream().findAny().orElse(null);
+        return new TeamDTO(leagueTableItem == null ? 0 : leagueTableItem.getPosition(),
+                teamRepository.findById(teamId).orElse(null), playerService.getByTeamId(teamId));
     }
 
     private void makeTeamPlayers(Team team) {

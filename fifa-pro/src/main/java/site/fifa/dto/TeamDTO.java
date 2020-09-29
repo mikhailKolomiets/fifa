@@ -11,6 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 public class TeamDTO {
 
+    private int leaguePosition;
     private Team team;
     private List<Player> players;
 

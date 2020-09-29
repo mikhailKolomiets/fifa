@@ -163,14 +163,32 @@ public class LeagueService {
      * @return
      */
     public List<LeagueTableItemDto> getLeagueTableById(Long leagueId) {
+        League league = leagueRepository.findById(leagueId).orElse(null);
+        if (league == null) {
+            return null;
+        }
         List<LeagueTableItem> leagueTableItems = leagueTableItemRepository.getByLeagueId(leagueId);
         List<LeagueTableItemDto> result = new ArrayList<>();
 
         for (LeagueTableItem l : leagueTableItems) {
-            result.add(new LeagueTableItemDto(l, teamRepository.findById(l.getTeamId()).orElse(null)));
+            result.add(new LeagueTableItemDto(league.getName(), l, teamRepository.findById(l.getTeamId()).orElse(null)));
         }
 
+        result.sort(Comparator.comparingInt(LeagueTableItemDto::getPosition));
+
         return result;
+    }
+
+    /**
+     * @param countryId
+     * @return first league table in the country
+     */
+    public List<LeagueTableItemDto> getLeagueTableByCountryId(Long countryId) {
+        List<League> countryLeagues = getLeaguesByCountryId(countryId);
+        if (countryLeagues.size() == 0) {
+            return null;
+        }
+        return getLeagueTableById(countryLeagues.get(0).getId());
     }
 
     private void resetLeaguesForTeamsIfLeaguesIsEnd(Country country) {

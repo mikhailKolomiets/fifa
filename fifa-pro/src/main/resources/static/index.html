@@ -8,13 +8,14 @@
 </head>
 <style>
 body {
-  background: url("/img/bgfifa.png") no-repeat right top;
+  background: url("img/bgfifa.png") no-repeat right top;
   height: 100%;
   -webkit-background-size: cover;
   -moz-background-size: cover;
   -o-background-size: cover;
   background-size: cover;
 }
+
 </style>
 <body>
 <h2 id="message">Привет в игре ФИФА!</h2>
@@ -31,6 +32,7 @@ body {
     <div id="league-game-2"></div>
     <div id="league-game-3"></div>
 </div>
+
 <div id="team-create">Создать команду</div>
 <div id="team-form">
     <input id="team-name" type="text" placeholder="Имя команды">
@@ -40,5 +42,11 @@ body {
     <input id="sub-team" type="submit" value="Создать">
 </div>
 <div id="new-team"></div>
+
+<div id="leagues">Просмотреть лиги</div>
+<select id="country-league">
+    <option value="0">Выбрать страну</option>
+</select>
+<div id="league-table"></div>
 </body>
 </html>
