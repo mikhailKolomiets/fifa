@@ -50,7 +50,7 @@ public class MatchService {
         }
 
         MatchStepDto matchStepDto = new MatchStepDto();
-        matchStepDto.setMatchDto(new MatchDto(match.getId(), PlaySide.CPU, teamService.getTeamById(firstTeamId), teamService.getTeamById(secondTeamId)));
+        matchStepDto.setMatchDto(new MatchDto(match.getId(), PlaySide.CPU,  LocalDate.now(), teamService.getTeamById(firstTeamId), teamService.getTeamById(secondTeamId)));
         matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
         matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
         matchStepDtos.add(matchStepDto);
@@ -110,8 +110,7 @@ public class MatchService {
         matchStepDto.setSecondTeamAction(randomizeActionByTeamChance(matchStepDto.getFirstTeamChance()));
 
         if (matchStepDto.getPosition() == 1) {
-            //matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.CD));
-            //matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.ST));
+
             if (matchStepDto.isFirstTeamBall()) {
                 addition = matchStepDto.getSecondTeamAction() == action ? 15 : 0;
                 if (action == 1) {
@@ -123,6 +122,7 @@ public class MatchService {
                         matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                     } else {
                         matchStepDto.setFirstTeamBall(false);
+                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                         stepLog += matchStepDto.getSecondPlayer().getName() + " забирает мяч";
                     }
                 } else if (action == 2 || action == 3) {
@@ -509,7 +509,7 @@ public class MatchService {
         List<MatchDto> result = new ArrayList<>();
         List<MatchPlay> matchPlays = matchRepository.getForLeaguePlay();
         for (MatchPlay m : matchPlays) {
-            result.add(new MatchDto(m.getId(), PlaySide.CPU, teamService.getTeamById(m.getFirstTeamId()), teamService.getTeamById(m.getSecondTeamId())));
+            result.add(new MatchDto(m.getId(), PlaySide.CPU, m.getStarted(), teamService.getTeamById(m.getFirstTeamId()), teamService.getTeamById(m.getSecondTeamId())));
         }
         return result;
     }
@@ -582,7 +582,7 @@ public class MatchService {
         );
 
         List<LeagueTableItem> leagueTableItems = leagueTableItemRepository.getByLeagueId(matchStepDto.getMatchDto().getFirstTeam().getTeam().getLeagueId());
-        leagueTableItems.sort(Comparator.comparingInt(LeagueTableItem::getPoint).reversed());
+        leagueTableItems.sort(Comparator.comparingInt(LeagueTableItem::getPoint).reversed().thenComparing(l -> -l.getGoals()).thenComparing(LeagueTableItem::getGoalLose));
         int i = 0;
         for (LeagueTableItem l : leagueTableItems) {
             leagueTableItemRepository.updatePosition(++i, l.getId());

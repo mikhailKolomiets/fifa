@@ -48,4 +48,10 @@ public class LeagueController {
         return leagueService.getLeagueTableById(leagueId);
     }
 
+    @ApiResponses({@ApiResponse(code = 200, message = "Return first league table from country")})
+    @GetMapping("table-first/{countryId}")
+    public List<LeagueTableItemDto> getLeagueTableByCountryId(@PathVariable Long countryId) {
+        return leagueService.getLeagueTableByCountryId(countryId);
+    }
+
 }
