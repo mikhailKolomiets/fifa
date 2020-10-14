@@ -485,7 +485,6 @@ public class MatchService {
         return matchLog.toString();
     }
 
-    @Transactional
     @Scheduled(cron = "5 12 15 * * *")
     public void playAllCreatedMatchesAfterToday() {
         List<MatchPlay> matchPlayList = matchRepository.getAllFromPlayInLeague(LocalDate.now());
