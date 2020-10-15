@@ -10,3 +10,7 @@ body {
     left: 500px;
     top: 270px;
 }
+.stati {
+    position:absolute;
+    right: 20px
+}
