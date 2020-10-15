@@ -1,20 +1,21 @@
 package site.fifa.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import site.fifa.dto.MatchDto;
-import site.fifa.dto.MatchStepDto;
-import site.fifa.dto.PlaySide;
-import site.fifa.dto.TeamDTO;
+import site.fifa.dto.*;
+import site.fifa.dto.mappers.StatisticDtoRowMapper;
 import site.fifa.entity.LeagueTableItem;
 import site.fifa.entity.Player;
 import site.fifa.entity.PlayerType;
 import site.fifa.entity.Statistic;
+import site.fifa.entity.match.GoalsInMatch;
 import site.fifa.entity.match.MatchPlay;
 import site.fifa.entity.match.MatchStatus;
 import site.fifa.entity.match.MatchType;
+import site.fifa.repository.GoalsInMatchRepository;
 import site.fifa.repository.LeagueTableItemRepository;
 import site.fifa.repository.MatchRepository;
 
@@ -36,6 +37,10 @@ public class MatchService {
     private StatisticService statisticService;
     @Autowired
     private LeagueTableItemRepository leagueTableItemRepository;
+    @Autowired
+    private GoalsInMatchRepository goalsInMatchRepository;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     private static ArrayList<MatchStepDto> matchStepDtos = new ArrayList<>();
 
@@ -68,9 +73,10 @@ public class MatchService {
         boolean startPointBall = false;
 
         if (matchStepDto.getStep() > 90 && matchStepDto.getAdditionTime() < 0) {
-            matchStepDto.setLastStepLog(matchStepDto.showGoals());
-            matchStepDto.getLog().add("Матч окончен!" + matchStepDto.getLastStepLog());
             if (!statisticService.isExistByMatchId(matchId)) {
+                matchStepDto.setAdditionTime(-2);
+                matchStepDto.setLastStepLog(matchStepDto.showGoals());
+                matchStepDto.getLog().add("Матч окончен!" + matchStepDto.getLastStepLog());
                 statisticService.saveStatistic(new Statistic(matchId, matchStepDto.getStatisticDto()));
                 matchRepository.updateMatchStatusById(MatchStatus.FINISHED, matchId);
                 updateLeagueTable(matchStepDto);
@@ -152,6 +158,13 @@ public class MatchService {
                         stepLog += matchStepDto.getSecondPlayer().getName() + attackLog(attackFactor, addition) + matchStepDto.showGoals();
                         matchStepDto.getStatisticDto().getGoals().y++;
                         startPointBall = true;
+                        // save goal result
+                        GoalsInMatch goalsInMatch = goalsInMatchRepository.save(new GoalsInMatch(
+                                null, matchStepDto.getMatchDto().getMatchId(), matchStepDto.getMatchDto().getSecondTeam().getTeam(), matchStepDto.getSecondPlayer(),
+                                matchStepDto.getStep()
+                        ));
+                        matchStepDto.getStatisticDto().getGoalsList().add(goalsInMatch);
+
                         matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
                         matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                     } else {
@@ -292,6 +305,12 @@ public class MatchService {
                         stepLog += matchStepDto.getFirstPlayer().getName() + attackLog(attackFactor, addition) + matchStepDto.showGoals();
                         matchStepDto.getStatisticDto().getGoals().x++;
                         startPointBall = true;
+                        // save goal result
+                        GoalsInMatch goalsInMatch = goalsInMatchRepository.save(new GoalsInMatch(
+                                null, matchStepDto.getMatchDto().getMatchId(), matchStepDto.getMatchDto().getFirstTeam().getTeam(), matchStepDto.getFirstPlayer(),
+                                matchStepDto.getStep()
+                        ));
+                        matchStepDto.getStatisticDto().getGoalsList().add(goalsInMatch);
                         matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
                         matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                     } else {
@@ -510,6 +529,21 @@ public class MatchService {
         for (MatchPlay m : matchPlays) {
             result.add(new MatchDto(m.getId(), PlaySide.CPU, m.getStarted(), teamService.getTeamById(m.getFirstTeamId()), teamService.getTeamById(m.getSecondTeamId())));
         }
+        return result;
+    }
+
+    public List<StatisticDto> getLastLeagueMatches(Long amount) {
+        List<StatisticDto> result = new ArrayList<>();
+
+        String sql = "select s.*, ft.name as 'ft', st.name as 'st'  from match_play mp " +
+                "inner join team ft on ft.id=mp.first_team_id " +
+                "inner join team st on st.id=mp.second_team_id " +
+                "inner join statistic s on s.match_id = mp.id " +
+                "where mp.type = 1 and mp.status = 2 order by mp.started desc limit ?";
+
+        result = jdbcTemplate.query(sql, new Object[]{amount}, new StatisticDtoRowMapper());
+
+
         return result;
     }
 

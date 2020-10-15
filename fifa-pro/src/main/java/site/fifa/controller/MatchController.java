@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import site.fifa.dto.MatchDto;
 import site.fifa.dto.MatchStepDto;
+import site.fifa.dto.StatisticDto;
 import site.fifa.entity.match.MatchPlay;
 import site.fifa.service.MatchService;
 
@@ -40,6 +41,11 @@ public class MatchController {
     @GetMapping("get-for-league")
     public void startLeague() {
         matchService.playAllCreatedMatchesAfterToday();
+    }
+
+    @GetMapping("last-league-matches/{amount}")
+    public List<StatisticDto> lastPlayedMatches(@PathVariable Long amount) {
+        return matchService.getLastLeagueMatches(amount);
     }
 
 }

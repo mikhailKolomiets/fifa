@@ -2,8 +2,10 @@ package site.fifa.dto;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import site.fifa.entity.match.GoalsInMatch;
 
 import java.awt.*;
+import java.util.ArrayList;
 
 /**
  * Represent the statistic between 2 teams in the match.
@@ -13,6 +15,8 @@ import java.awt.*;
 @NoArgsConstructor
 public class StatisticDto {
 
+    private String firstTeamName;
+    private String secondTeamName;
     private Point goals = new Point();
     private Point goalKick = new Point();
     private Point percentageHoldBall= new Point();
@@ -20,6 +24,7 @@ public class StatisticDto {
     private Point redCard = new Point();
     private Point foul = new Point();
     private Point stepHold = new Point();
+    private ArrayList<GoalsInMatch> goalsList = new ArrayList<>();
 
     /**
      * calculate the percentage ball hold to this according the step ball hold team

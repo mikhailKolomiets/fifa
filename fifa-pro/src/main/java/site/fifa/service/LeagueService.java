@@ -11,6 +11,7 @@ import site.fifa.entity.match.MatchStatus;
 import site.fifa.entity.match.MatchType;
 import site.fifa.repository.*;
 
+import javax.annotation.PostConstruct;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;

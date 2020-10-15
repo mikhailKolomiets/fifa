@@ -29,7 +29,7 @@ ballPosition = 500;
                                     $("#match-status").html(getLog(data));
                                     $("#title-change").text(data.matchDto.firstTeam.team.name + " " + data.goalFirstTeam + ":" + data.goalSecondTeam +
                                         " " + data.matchDto.secondTeam.team.name);
-                                        if (data.step > 90 && data.additionTime < 0) {
+                                        if (data.step > 90 && data.additionTime == -2) {
                                             mpr.show();
                                         }
                                 }
@@ -44,9 +44,9 @@ ballPosition = 500;
                                     $("#match-status").html(getLog(data));
                                     $("#title-change").text(data.matchDto.firstTeam.team.name + " " + data.goalFirstTeam + ":" + data.goalSecondTeam +
                                          " " + data.matchDto.secondTeam.team.name);
-                                                                                 if (data.step > 90 && data.additionTime < 0) {
-                                                                                     mpr.show();
-                                                                                 }
+                                    if (data.step > 90 && data.additionTime == -2) {
+                                         mpr.show();
+                                    }
                                 }
                             });
     });
@@ -59,9 +59,9 @@ ballPosition = 500;
                                     $("#match-status").html(getLog(data));
                                     $("#title-change").text(data.matchDto.firstTeam.team.name + " " + data.goalFirstTeam + ":" + data.goalSecondTeam +
                                         " " + data.matchDto.secondTeam.team.name);
-                                                                                if (data.step > 90 && data.additionTime < 0) {
-                                                                                    mpr.show();
-                                                                                }
+                                    if (data.step > 90 && data.additionTime == -2) {
+                                         mpr.show();
+                                    }
                                 }
                             });
     });
@@ -127,8 +127,27 @@ ballPosition = 500;
                 action3.text('Отбор');
             }
         }
+    writeStatistic(data.statisticDto, data.matchDto.firstTeam.team.name, data.matchDto.secondTeam.team.name);
 
         $(".ball-go").animate({left: data.ballPosition.x, top: data.ballPosition.y});
         $("#show-area").text(result);
+    }
+
+    function writeStatistic(stat, ft, st) {
+        var tableContent = "<table> <tr> <th>" + ft + "</th><th>" + stat.goals.x + ":" + stat.goals.y + "</th><th>" + st + "</th></tr>"
+        + "<tr><th>" + stat.goalKick.x + "</th><th>Ударов</th><th>" + stat.goalKick.y + "</th></tr>"
+        + "<tr><th>" + stat.percentageHoldBall.x + "</th><th>%BM</th><th>" + stat.percentageHoldBall.y + "</th></tr>";
+
+        for (i in stat.goalsList) {
+            goal = stat.goalsList[i];
+            if (goal.team.name == ft) {
+                tableContent = tableContent + "<tr><th>" + goal.player.name + "</th><th>" + goal.gameTime + "</th><th></th></tr>";
+            } else {
+                tableContent = tableContent + "<tr><th></th><th>" + goal.gameTime + "</th><th>" + goal.player.name + "</th></tr>";
+            }
+        }
+
+        tableContent = tableContent + "</table>";
+        $("#statistic").html(tableContent);
     }
 })
