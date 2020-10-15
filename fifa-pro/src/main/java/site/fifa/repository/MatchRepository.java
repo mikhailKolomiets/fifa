@@ -33,4 +33,7 @@ public interface MatchRepository extends CrudRepository<MatchPlay, Long> {
             "where mp.type = 1 and mp.status = 0 order by mp.started and t.league_id = :league")
     List<MatchPlay> getNextMatchesInLeague(@Param("league") Long leagueId);
 
+    @Query(nativeQuery = true, value = "select * from match_play mp where mp.type = 1 and mp.status = 2 order by mp.started desc limit :amount")
+    List<MatchPlay> getLastLeagueMatches(@Param("amount") Long amount);
+
 }
