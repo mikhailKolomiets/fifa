@@ -18,6 +18,7 @@ import site.fifa.entity.match.MatchType;
 import site.fifa.repository.LeagueTableItemRepository;
 import site.fifa.repository.MatchRepository;
 
+import javax.annotation.PostConstruct;
 import java.awt.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -485,6 +486,7 @@ public class MatchService {
         return matchLog.toString();
     }
 
+    @PostConstruct
     @Scheduled(cron = "5 12 15 * * *")
     public void playAllCreatedMatchesAfterToday() {
         List<MatchPlay> matchPlayList = matchRepository.getAllFromPlayInLeague(LocalDate.now());
