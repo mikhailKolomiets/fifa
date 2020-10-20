@@ -19,7 +19,6 @@ import site.fifa.repository.GoalsInMatchRepository;
 import site.fifa.repository.LeagueTableItemRepository;
 import site.fifa.repository.MatchRepository;
 
-import javax.annotation.PostConstruct;
 import java.awt.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
