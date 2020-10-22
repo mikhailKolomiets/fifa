@@ -15,6 +15,7 @@ import java.util.ArrayList;
 @NoArgsConstructor
 public class StatisticDto {
 
+    private Long matchId;
     private String firstTeamName;
     private String secondTeamName;
     private Point goals = new Point();

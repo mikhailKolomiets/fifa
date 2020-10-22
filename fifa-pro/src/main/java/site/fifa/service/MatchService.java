@@ -44,6 +44,7 @@ public class MatchService {
     private JdbcTemplate jdbcTemplate;
 
     private static ArrayList<MatchStepDto> matchStepDtos = new ArrayList<>();
+    private static ArrayList<StatisticDto> lastMatches = new ArrayList<>();
 
     @Transactional
     public MatchDto startMatchWithPC(Long firstTeamId, Long secondTeamId) {
@@ -59,6 +60,8 @@ public class MatchService {
         matchStepDto.setMatchDto(new MatchDto(match.getId(), PlaySide.CPU,  LocalDate.now(), teamService.getTeamById(firstTeamId), teamService.getTeamById(secondTeamId)));
         matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
         matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
+        matchStepDto.getStatisticDto().setFirstTeamName(matchStepDto.getMatchDto().getFirstTeam().getTeam().getName());
+        matchStepDto.getStatisticDto().setSecondTeamName(matchStepDto.getMatchDto().getSecondTeam().getTeam().getName());
         matchStepDtos.add(matchStepDto);
         return matchStepDto.getMatchDto();
     }
@@ -78,6 +81,7 @@ public class MatchService {
                 matchStepDto.setAdditionTime(-2);
                 matchStepDto.setLastStepLog(matchStepDto.showGoals());
                 matchStepDto.getLog().add("Матч окончен!" + matchStepDto.getLastStepLog());
+                lastMatches.add(matchStepDto.getStatisticDto());
                 statisticService.saveStatistic(new Statistic(matchId, matchStepDto.getStatisticDto()));
                 matchRepository.updateMatchStatusById(MatchStatus.FINISHED, matchId);
                 updateLeagueTable(matchStepDto);
@@ -534,8 +538,11 @@ public class MatchService {
         return result;
     }
 
-    public List<StatisticDto> getLastLeagueMatches(Long amount) {
-        List<StatisticDto> result = new ArrayList<>();
+    @PostConstruct
+    @Scheduled(cron = "5 5 * * * *")
+    public List<StatisticDto> updateLastLeagueMatches() {
+        // amount matches in the result
+        int amount = 5;
 
         String sql = "select s.*, ft.name as 'ft', st.name as 'st'  from match_play mp " +
                 "inner join team ft on ft.id=mp.first_team_id " +
@@ -543,10 +550,17 @@ public class MatchService {
                 "inner join statistic s on s.match_id = mp.id " +
                 "where mp.type = 1 and mp.status = 2 order by mp.started desc limit ?";
 
-        result = jdbcTemplate.query(sql, new Object[]{amount}, new StatisticDtoRowMapper());
+        lastMatches.clear();
+        lastMatches.addAll(jdbcTemplate.query(sql, new Object[]{amount}, new StatisticDtoRowMapper()));
+        for (StatisticDto s : lastMatches) {
+            s.getGoalsList().addAll(goalsInMatchRepository.getByMatchId(s.getMatchId()));
+        }
+        System.out.println("matches statistic updated");
+        return lastMatches;
+    }
 
-
-        return result;
+    public ArrayList<StatisticDto> getLastMatches() {
+        return lastMatches;
     }
 
     private Player getRandomPlayerByType(List<Player> players, PlayerType type) {
