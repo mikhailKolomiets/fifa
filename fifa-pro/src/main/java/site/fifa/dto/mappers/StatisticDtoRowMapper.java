@@ -11,6 +11,7 @@ public class StatisticDtoRowMapper implements RowMapper<StatisticDto> {
     @Override
     public StatisticDto mapRow(ResultSet resultSet, int i) throws SQLException {
         StatisticDto result = new StatisticDto();
+        result.setMatchId(resultSet.getLong("match_id"));
         result.setFirstTeamName(resultSet.getString("ft"));
         result.setSecondTeamName(resultSet.getString("st"));
         result.setGoals(new Point(resultSet.getInt("ft_goals"),resultSet.getInt("st_goals")));
