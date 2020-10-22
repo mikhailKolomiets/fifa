@@ -5,6 +5,9 @@ var teamForm = $("#team-form");
 var playSelect = $("#play-select");
 var countryLeague = $("#country-league");
 var leagueTable = $("#league-table");
+var lastMatchesData = "";
+var matchIntervalShow;
+var matchShowIndex = 0;
 hideAll();
 
     $("#play").click(function() {
@@ -144,6 +147,62 @@ hideAll();
         }
     });
     });
+
+    $.ajax({
+        url : "match/last-league-matches",
+        type : "GET",
+        success : function(games) {
+            lastMatchesData = games;
+            if (games.length > 0) {
+                textLength = 50;
+                result = "";
+                for (i in games) {
+                    result = result + games[i].firstTeamName + " " + games[i].goals.x + ":" + games[i].goals.y + " " + games[i].secondTeamName + " / "
+                }
+                if (result.length < textLength) {
+                    $("#last-matches").text(result);
+                } else {
+                    i = 0;
+                        matchIntervalShow = setInterval(function(){
+                            if (i < result.length - textLength) {
+                                txt = result.substr(i, textLength)
+                            } else {
+                                txt = result.substr(i, result.length) + result.substr(0, i - result.length + textLength);
+                            }
+                            $("#last-matches").text(txt);
+                            i = i < result.length ? i + 1 : 0;
+                        }, 700);
+                }
+            }
+        }
+
+    });
+
+    $("#last-matches").click(function() {
+        clearInterval(matchIntervalShow);
+        showStatTableByIndex(matchShowIndex);
+        matchShowIndex++;
+        matchShowIndex = matchShowIndex > lastMatchesData.length - 1 ? 0 : matchShowIndex;
+    });
+
+    function showStatTableByIndex(index) {
+                stat = lastMatchesData[index];
+                        var tableContent = "<table> <tr> <th>" + stat.firstTeamName + "</th><th>" + stat.goals.x + ":" + stat.goals.y + "</th><th>" + stat.secondTeamName + "</th></tr>"
+                        + "<tr><th>" + stat.goalKick.x + "</th><th>Ударов</th><th>" + stat.goalKick.y + "</th></tr>"
+                        + "<tr><th>" + stat.percentageHoldBall.x + "</th><th>%BM</th><th>" + stat.percentageHoldBall.y + "</th></tr>";
+
+                        for (i in stat.goalsList) {
+                            goal = stat.goalsList[i];
+                            if (goal.team.name == stat.firstTeamName) {
+                                tableContent = tableContent + "<tr><th>" + goal.player.name + "</th><th>" + goal.gameTime + "</th><th></th></tr>";
+                            } else {
+                                tableContent = tableContent + "<tr><th></th><th>" + goal.gameTime + "</th><th>" + goal.player.name + "</th></tr>";
+                            }
+                        }
+
+                        tableContent = tableContent + "</table>";
+                $("#last-matches").html(tableContent);
+    }
 
     $("#sub-team").click(function() {
 

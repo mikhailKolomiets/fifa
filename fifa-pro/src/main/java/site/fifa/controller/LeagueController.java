@@ -35,13 +35,6 @@ public class LeagueController {
         return leagueService.getLeaguesByCountryId(countryId);
     }
 
-    // todo remove after test
-    @ApiResponses({@ApiResponse(code = 200, message = "Try to start all leagues")})
-    @GetMapping("start")
-    public void startLeague() {
-        leagueService.startLeagues();
-    }
-
     @ApiResponses({@ApiResponse(code = 200, message = "Return league table")})
     @GetMapping("get-table/{leagueId}")
     public List<LeagueTableItemDto> getLeagueTableByLeagueId(@PathVariable Long leagueId) {

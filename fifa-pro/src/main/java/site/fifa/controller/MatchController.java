@@ -43,9 +43,10 @@ public class MatchController {
         matchService.playAllCreatedMatchesAfterToday();
     }
 
-    @GetMapping("last-league-matches/{amount}")
-    public List<StatisticDto> lastPlayedMatches(@PathVariable Long amount) {
-        return matchService.getLastLeagueMatches(amount);
+    @ApiResponses({@ApiResponse(code = 200, message = "Return last some matches in the leagues")})
+    @GetMapping("last-league-matches")
+    public List<StatisticDto> lastPlayedMatches() {
+        return matchService.getLastMatches();
     }
 
 }
