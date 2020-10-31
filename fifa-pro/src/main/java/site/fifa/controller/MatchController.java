@@ -20,9 +20,9 @@ public class MatchController {
     private MatchService matchService;
 
     @ApiResponses({@ApiResponse(code = 200, message = "Started game between ywo teams")})
-    @PostMapping("start/{firstTeamId}/{secondTeamId}")
-    public MatchDto startMatch(@PathVariable Long firstTeamId,@PathVariable Long secondTeamId) {
-        return matchService.startMatchWithPC(firstTeamId, secondTeamId);
+    @PostMapping("start/{firstTeamId}/{secondTeamId}/{isPC}")
+    public MatchDto startMatch(@PathVariable Long firstTeamId,@PathVariable Long secondTeamId, @PathVariable Long isPC) {
+        return matchService.startMatchWithPC(firstTeamId, secondTeamId, isPC.intValue() == 1);
     }
 
     @ApiResponses({@ApiResponse(code = 200, message = "calculate match step by action")})

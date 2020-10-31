@@ -5,9 +5,11 @@ action3 = $("#action3");
 statusMatch = $("#match-status");
 mpr = $("#main-page-ref");
 ballPosition = 500;
+var matchType = localStorage.getItem("p2p") == "first" ? 0 : 1;
+var socket;
 
     $.ajax({
-        url: '/match/start/' + localStorage.getItem("team1") + "/" + localStorage.getItem("team2"),
+        url: '/match/start/' + localStorage.getItem("team1") + "/" + localStorage.getItem("team2") + '/' + matchType,
         type: "POST",
         success: function (data) {
             $("#title-change").text(data.firstTeam.team.name + " 0:0 " + data.secondTeam.team.name);
@@ -17,54 +19,74 @@ ballPosition = 500;
                             action1.text('Атаковать');
                             action2.text('Укрепиться в центре');
                             action3.text('Пас назад');
-                            mpr.hide()
+                            mpr.hide();
         }
     });
 
+    if (localStorage.getItem("p2p") == "first" || localStorage.getItem("p2p") == "second") {
+        socket = new SockJS('/fifa-stomp');
+                var stompClient = Stomp.over(socket);
+                stompClient.connect({}, function (frame) {
+                    console.log('Connected: ' + frame);
+                    stompClient.subscribe('/topic/p2p/' + localStorage.getItem("matchId") , function (dto) {
+                    dto = JSON.parse(dto.body);
+                        $("#match-status").html(getLog(dto));
+                        $("#title-change").text(dto.matchDto.firstTeam.team.name + " " + dto.goalFirstTeam + ":" + dto.goalSecondTeam +
+                            " " + dto.matchDto.secondTeam.team.name);
+                            if (dto.step > 90 && dto.additionTime == -2) {
+                                mpr.show();
+                            }
+                    });
+                });
+    }
+
     action1.click(function() {
-                            $.ajax({
-                                url: '/match/step/' + localStorage.getItem("matchId") + "/1",
-                                type: "POST",
-                                success: function (data) {
-                                    $("#match-status").html(getLog(data));
-                                    $("#title-change").text(data.matchDto.firstTeam.team.name + " " + data.goalFirstTeam + ":" + data.goalSecondTeam +
-                                        " " + data.matchDto.secondTeam.team.name);
-                                        if (data.step > 90 && data.additionTime == -2) {
-                                            mpr.show();
-                                        }
-                                }
-                            });
+        if (localStorage.getItem("p2p") == "false") {
+            changeButton(1);
+        } else {
+            p2pgame(1);
+        }
     });
 
     action2.click(function() {
-                            $.ajax({
-                                url: '/match/step/' + localStorage.getItem("matchId") + "/2",
-                                type: "POST",
-                                success: function (data) {
-                                    $("#match-status").html(getLog(data));
-                                    $("#title-change").text(data.matchDto.firstTeam.team.name + " " + data.goalFirstTeam + ":" + data.goalSecondTeam +
-                                         " " + data.matchDto.secondTeam.team.name);
-                                    if (data.step > 90 && data.additionTime == -2) {
-                                         mpr.show();
-                                    }
-                                }
-                            });
+        if (localStorage.getItem("p2p") == "false") {
+            changeButton(2);
+        } else {
+            p2pgame(2);
+        }
     });
 
     action3.click(function() {
-                            $.ajax({
-                                url: '/match/step/' + localStorage.getItem("matchId") + "/3",
-                                type: "POST",
-                                success: function (data) {
-                                    $("#match-status").html(getLog(data));
-                                    $("#title-change").text(data.matchDto.firstTeam.team.name + " " + data.goalFirstTeam + ":" + data.goalSecondTeam +
-                                        " " + data.matchDto.secondTeam.team.name);
-                                    if (data.step > 90 && data.additionTime == -2) {
-                                         mpr.show();
-                                    }
-                                }
-                            });
+        if (localStorage.getItem("p2p") == "false") {
+            changeButton(3);
+        } else {
+            p2pgame(3);
+        }
     });
+
+    function changeButton(action) {
+        $.ajax({
+            url: '/match/step/' + localStorage.getItem("matchId") + "/" + action,
+            type: "POST",
+            success: function (data) {
+            $("#match-status").html(getLog(data));
+            $("#title-change").text(data.matchDto.firstTeam.team.name + " " + data.goalFirstTeam + ":" + data.goalSecondTeam +
+                " " + data.matchDto.secondTeam.team.name);
+                if (data.step > 90 && data.additionTime == -2) {
+                    mpr.show();
+                }
+            }
+        });
+    }
+
+    function p2pgame(action) {
+                    room = localStorage.getItem("matchId");
+                    if (localStorage.getItem("p2p") == "first") {
+                        stompClient.send("/app/p2p/" + room, {}, action + "0");
+                    } else {
+                        stompClient.send("/app/p2p/" + room, {}, "" + action);
+                    }
+    }
 
     function getLog(data) {
         showArea(data);
