@@ -69,4 +69,9 @@ public class MatchStepDto {
         additionTime = (int) (Math.random() * 6);
     }
 
+    public void nullableActionStep() {
+        firstTeamAction = 0;
+        secondTeamAction = 0;
+    }
+
 }
