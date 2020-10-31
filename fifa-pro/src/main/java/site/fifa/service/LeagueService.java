@@ -3,7 +3,6 @@ package site.fifa.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import site.fifa.dto.LeagueTableItemDto;
 import site.fifa.entity.*;
 import site.fifa.entity.match.MatchPlay;
@@ -37,7 +36,6 @@ public class LeagueService {
      * The league contain from 5 to 25 team
      */
     @PostConstruct
-    @Transactional
     @Scheduled(cron = "5 13 21 * * FRI")
     public void startLeagues() {
         countryRepository.findAll().forEach(this::startLeagueByCountry);

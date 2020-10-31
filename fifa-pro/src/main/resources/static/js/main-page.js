@@ -8,7 +8,9 @@ var leagueTable = $("#league-table");
 var lastMatchesData = "";
 var matchIntervalShow;
 var matchShowIndex = 0;
+var leagueGame1 = $("#league-game-1");
 hideAll();
+localStorage.setItem("p2p", "false");
 
     $("#play").click(function() {
         $.ajax({
@@ -36,41 +38,40 @@ hideAll();
                                 $.ajax({
                                     url: 'match/get-for-league-games',
                                     success: function (games) {
-                                    var ft;
-                                    var st;
                                         if (games.length > 0) {
-                                        ft = games[0].firstTeam;
-                                        st = games[0].secondTeam;
-                                        $("#league-game-1").text('(' + ft.team.country.countryName + ') ' + ft.team.name + ' (' + ft.leaguePosition + ") - " + st.team.name + ' (' + st.leaguePosition + ")").click(function() {
-                                                    localStorage.setItem("team1", games[0].firstTeam.team.id);
-                                                    localStorage.setItem("team2", games[0].secondTeam.team.id);
-                                                    window.location.href = "match.html";
-                                        })
+                                            statGame(games[0], $("#league-game-1"))
                                         }
                                         if (games.length > 1) {
-                                            ft = games[1].firstTeam;
-                                            st = games[1].secondTeam;
-                                            $("#league-game-2").text('(' + ft.team.country.countryName + ') ' + ft.team.name + ' (' + ft.leaguePosition + ") - " + st.team.name + ' (' + st.leaguePosition + ")").click(function() {
-                                                   localStorage.setItem("team1", games[1].firstTeam.team.id);
-                                                   localStorage.setItem("team2", games[1].secondTeam.team.id);
-                                                   window.location.href = "match.html";
-                                            })
+                                            statGame(games[1], $("#league-game-2"))
                                         }
-                                       if (games.length > 2) {
-                                       ft = games[2].firstTeam;
-                                       st = games[2].secondTeam;
-                                       $("#league-game-3").text('(' + ft.team.country.countryName + ') ' + ft.team.name + ' (' + ft.leaguePosition + ") - " + st.team.name + ' (' + st.leaguePosition + ")").click(function() {
-                                                  localStorage.setItem("team1", games[2].firstTeam.team.id);
-                                                  localStorage.setItem("team2", games[2].secondTeam.team.id);
-                                                  window.location.href = "match.html";
-                                       })
-                                       }
+                                        if (games.length > 2) {
+                                            statGame(games[2], $("#league-game-3"))
+                                        }
                                     }
                                 });
                         }
                     }
          });
     });
+
+    function statGame(game, opt) {
+        ft = game.firstTeam;
+        st = game.secondTeam;
+        opt.text('(' + ft.team.country.countryName + ') ' + ft.team.name + ' (' + ft.leaguePosition + ") - " + st.team.name + ' (' + st.leaguePosition + ")")
+            .css('color' , game.playSide == 'FiRST_TEAM' ? "red" : "")
+            .click(function() {
+                 if ($("#is2p")[0].checked) {
+                    localStorage.setItem("p2p", "first");
+                 }
+
+                 localStorage.setItem("team1", game.firstTeam.team.id);
+                 localStorage.setItem("team2", game.secondTeam.team.id);
+                 if (game.playSide == 'FiRST_TEAM') {
+                    localStorage.setItem("p2p", "second");
+                 }
+                 window.location.href = "match.html";
+            });
+    }
 
     $("#play-match").click(function() {
         localStorage.setItem("team1", $('#firstTeamSelect').val());
