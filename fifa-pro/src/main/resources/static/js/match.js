@@ -105,6 +105,10 @@ var socket;
 
     function showArea(data) {
         result = "";
+        if (localStorage.getItem("p2p") == "second") {
+            data.firstTeamBall = !data.firstTeamBall;
+            data.position = data.position == 3 ? 1 : data.position == 1 ? 3 : 2;
+        }
 
         if (data.firstTeamBall) {
         $("#playerName").text(data.firstPlayer.name);

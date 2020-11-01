@@ -53,7 +53,7 @@ public class MatchService {
                 .stream().findAny().orElse(null);
         if (match == null) {
             match = matchRepository.save(new MatchPlay(MatchStatus.STARTED, MatchType.FRIENDLY, LocalDate.now(), firstTeamId, secondTeamId));
-        } else {
+        } else if (isPC || getMatchStepDtoById(match.getId()) != null) {
             matchRepository.updateMatchStatusById(MatchStatus.STARTED, match.getId());
         }
 
