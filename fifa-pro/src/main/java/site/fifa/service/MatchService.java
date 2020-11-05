@@ -119,9 +119,10 @@ public class MatchService {
 
         int addition;
 
+        // calculate step action algorithm
+        matchStepDto.setSecondTeamAction(randomizeActionByTeamChance(matchStepDto.getSecondTeamChance()));
         if (action < 1) {
             action = randomizeActionByTeamChance(matchStepDto.getFirstTeamChance());
-            matchStepDto.setSecondTeamAction(randomizeActionByTeamChance(matchStepDto.getSecondTeamChance()));
         } else if (matchStepDto.getMatchDto().getPlaySide() != PlaySide.CPU) {
             if (action > 9) {
                 matchStepDto.setFirstTeamAction(action / 10);
@@ -149,6 +150,7 @@ public class MatchService {
                         matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                     } else {
                         matchStepDto.setFirstTeamBall(false);
+                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
                         matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                         stepLog += matchStepDto.getSecondPlayer().getName() + " забирает мяч";
                     }
@@ -297,7 +299,8 @@ public class MatchService {
                     } else {
                         matchStepDto.setFirstTeamBall(true);
                         stepLog += matchStepDto.getFirstPlayer().getName() + " забирает мяч";
-                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.CD));
+                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
+                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                     }
                 } else if (matchStepDto.getSecondTeamAction() == 2 || matchStepDto.getSecondTeamAction() == 3) {
                     matchStepDto.plusChance(2);
