@@ -406,7 +406,7 @@ public class MatchService {
         // amount matches in the result
         int amount = 5;
 
-        String sql = "select s.*, ft.name as 'ft', st.name as 'st'  from match_play mp " +
+        String sql = "select s.*, ft.name as ftm, st.name as stm  from match_play mp " +
                 "inner join team ft on ft.id=mp.first_team_id " +
                 "inner join team st on st.id=mp.second_team_id " +
                 "inner join statistic s on s.match_id = mp.id " +

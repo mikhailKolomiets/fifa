@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import site.fifa.entity.Country;
 import site.fifa.repository.CountryRepository;
 
+import javax.annotation.PostConstruct;
 import java.util.Arrays;
 import java.util.List;
 
@@ -23,6 +24,7 @@ public class CountryService {
             new Country(null, "Spain", 15)
     );
 
+    @PostConstruct
     public List<Country> getCountries() {
         List<Country> countries = (List<Country>) countryRepository.findAll();
 
