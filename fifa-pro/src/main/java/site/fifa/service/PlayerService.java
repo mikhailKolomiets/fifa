@@ -54,18 +54,4 @@ public class PlayerService {
         return name.substring(0, 1).toUpperCase() + name.substring(1);
     }
 
-    /**
-     *  for test generated value
-     * @param args
-     */
-    public static void main(String[] args) {
-        PlayerService playerService = new PlayerService();
-        Player player;
-        for (int i = 0; i < 10; i++) {
-            player = playerService.generateRandomPlayer();
-            System.out.println(player.getName() + ", " + player.getAge() + " years, " + player.getType().name() +
-                    " with speed " + player.getSpeed() + " and skill " + player.getSkill());
-        }
-    }
-
 }
