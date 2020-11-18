@@ -23,5 +23,7 @@ public class Player {
     private int exp;
     private int skill;
     private Long teamId;
+    private boolean reserve;
+    private int price;
 
 }

@@ -31,6 +31,11 @@ public class PlayerServiceTest {
     private TeamRepository teamRepository;
 
     @Test
+    public void freePlayersCheckTest() {
+        assertNotEquals(0, playerService.getFreePlayers().size());
+    }
+
+    @Test
     public void saveAndCheckIsPresentTest() {
         Player player = playerRepository.save(playerService.generateRandomPlayer());
         assertNotNull(player.getId());
