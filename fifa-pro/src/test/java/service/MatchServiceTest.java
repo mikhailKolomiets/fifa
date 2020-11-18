@@ -1,5 +1,6 @@
 package service;
 
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import site.fifa.dto.MatchDto;
 import site.fifa.dto.MatchStepDto;
 import site.fifa.dto.NewTeamCreateRequest;
 import site.fifa.dto.TeamDTO;
+import site.fifa.entity.Team;
 import site.fifa.entity.match.MatchPlay;
 import site.fifa.entity.match.MatchStatus;
 import site.fifa.repository.GoalsInMatchRepository;
@@ -44,9 +46,16 @@ public class MatchServiceTest {
     @Autowired
     private LeagueRepository leagueRepository;
 
+    private NewTeamCreateRequest team = new NewTeamCreateRequest();
+
+    @After
+    public void cleanData() {
+        goalsInMatchRepository.deleteAll();
+        teamRepository.deleteAll();
+    }
+
     @Test
     public void startAndPlaySampleMatch() {
-        NewTeamCreateRequest team = new NewTeamCreateRequest();
         team.setCountryName("Germany");
         team.setTeamName("Borusia");
         TeamDTO firstTeam = teamService.createNewTeam(team);
@@ -73,13 +82,12 @@ public class MatchServiceTest {
         }
         assertEquals(MatchStatus.FINISHED, matchRepository.findById(testedMatch.getMatchId()).get().getStatus());
 
-        goalsInMatchRepository.deleteAll();
-        teamRepository.deleteAll();
+        testedMatch.hashCode();
+
     }
 
     @Test
     public void playLeagueMatchesTest() {
-        NewTeamCreateRequest team = new NewTeamCreateRequest();
         team.setCountryName("Germany");
 
         for(int i = 0; i < 6; i++) {

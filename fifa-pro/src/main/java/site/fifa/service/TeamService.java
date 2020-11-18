@@ -11,6 +11,7 @@ import site.fifa.repository.TeamRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,20 +25,19 @@ public class TeamService {
 
     public TeamDTO createNewTeam(NewTeamCreateRequest request) {
 
-        if(teamRepository.findByName(request.getTeamName()) != null)
+        if (teamRepository.findByName(request.getTeamName()) != null)
             return null;
 
         Country country = countryRepository.findByCountryName(request.getCountryName());
         Team team = new Team();
 
         team.setCountry(country);
-        String name = request.getTeamName() == null ? "" + (int)(Math.random() * 1000) : request.getTeamName();
+        String name = request.getTeamName() == null ? "" + (int) (Math.random() * 1000) : request.getTeamName();
         team.setName(name);
 
         team = teamRepository.save(team);
-        makeTeamPlayers(team);
 
-        return new TeamDTO(0, team, playerService.getByTeamId(team.getId()));
+        return new TeamDTO().buildTeam(team).buildPlayers(makeTeamPlayers(team));
     }
 
     public List<Team> getTeams() {
@@ -52,29 +52,35 @@ public class TeamService {
             return null;
         }
         LeagueTableItem leagueTableItem = leagueTableItemRepository.getByLeagueIdAndTeamId(team.getLeagueId(), teamId).stream().findAny().orElse(null);
+
+        List<Player> teamStuff = playerService.getByTeamId(teamId);
+
         return new TeamDTO(leagueTableItem == null ? 0 : leagueTableItem.getPosition(),
-                teamRepository.findById(teamId).orElse(null), playerService.getByTeamId(teamId));
+                teamRepository.findById(teamId).orElse(null), teamStuff.stream().filter(p -> !p.isReserve()).collect(Collectors.toList()),
+                teamStuff.stream().filter(Player::isReserve).collect(Collectors.toList()));
     }
 
-    private void makeTeamPlayers(Team team) {
+    private List<Player> makeTeamPlayers(Team team) {
+        List<Player> result = new ArrayList<>();
         Player player = playerService.generateRandomPlayerByType(PlayerType.GK);
         player.setTeamId(team.getId());
-        playerService.savePlayer(player);
+        result.add(playerService.savePlayer(player));
 
         for (int i = 0; i < 4; i++) {
             player = playerService.generateRandomPlayerByType(PlayerType.CD);
             player.setTeamId(team.getId());
-            playerService.savePlayer(player);
+            result.add(playerService.savePlayer(player));
         }
 
         for (int i = 0; i < 3; i++) {
             player = playerService.generateRandomPlayerByType(PlayerType.MD);
             player.setTeamId(team.getId());
-            playerService.savePlayer(player);
+            result.add(playerService.savePlayer(player));
             player = playerService.generateRandomPlayerByType(PlayerType.ST);
             player.setTeamId(team.getId());
-            playerService.savePlayer(player);
+            result.add(playerService.savePlayer(player));
         }
+        return result;
     }
 
 }

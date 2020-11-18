@@ -6,7 +6,7 @@ statusMatch = $("#match-status");
 mpr = $("#main-page-ref");
 ballPosition = 500;
 var matchType = localStorage.getItem("p2p") == "first" ? 0 : 1;
-var socket;
+var stompClient;
 
     $.ajax({
         url: '/match/start/' + localStorage.getItem("team1") + "/" + localStorage.getItem("team2") + '/' + matchType,
@@ -20,25 +20,24 @@ var socket;
                             action2.text('Укрепиться в центре');
                             action3.text('Пас назад');
                             mpr.hide();
+                            if (localStorage.getItem("p2p") == "first" || localStorage.getItem("p2p") == "second") {
+                                socket = new SockJS('/fifa-stomp');
+                                        stompClient = Stomp.over(socket);
+                                        stompClient.connect({}, function (frame) {
+                                            console.log('Connected: ' + frame);
+                                            stompClient.subscribe('/topic/p2p/' + localStorage.getItem("matchId") , function (dto) {
+                                            dto = JSON.parse(dto.body);
+                                                $("#match-status").html(getLog(dto));
+                                                $("#title-change").text(dto.matchDto.firstTeam.team.name + " " + dto.goalFirstTeam + ":" + dto.goalSecondTeam +
+                                                    " " + dto.matchDto.secondTeam.team.name);
+                                                    if (dto.step > 90 && dto.additionTime == -2) {
+                                                        mpr.show();
+                                                    }
+                                            });
+                                        });
+                            }
         }
     });
-
-    if (localStorage.getItem("p2p") == "first" || localStorage.getItem("p2p") == "second") {
-        socket = new SockJS('/fifa-stomp');
-                var stompClient = Stomp.over(socket);
-                stompClient.connect({}, function (frame) {
-                    console.log('Connected: ' + frame);
-                    stompClient.subscribe('/topic/p2p/' + localStorage.getItem("matchId") , function (dto) {
-                    dto = JSON.parse(dto.body);
-                        $("#match-status").html(getLog(dto));
-                        $("#title-change").text(dto.matchDto.firstTeam.team.name + " " + dto.goalFirstTeam + ":" + dto.goalSecondTeam +
-                            " " + dto.matchDto.secondTeam.team.name);
-                            if (dto.step > 90 && dto.additionTime == -2) {
-                                mpr.show();
-                            }
-                    });
-                });
-    }
 
     action1.click(function() {
         if (localStorage.getItem("p2p") == "false") {
@@ -135,7 +134,7 @@ var socket;
         $("#playerName").text(data.secondPlayer.name);
             if (data.position == 2) {
             //ballPosition = 550;
-                   result = ". . . <- 0 . . .";
+                result = ". . . <- 0 . . .";
                 action1.text('Не пропускать');
                 action2.text('Пытаться забрать мяч');
                 action3.text('Блокировать передачи');

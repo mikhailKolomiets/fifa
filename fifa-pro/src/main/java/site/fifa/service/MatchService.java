@@ -120,8 +120,8 @@ public class MatchService {
         int addition;
 
         // calculate step action algorithm
-        matchStepDto.setSecondTeamAction(randomizeActionByTeamChance(matchStepDto.getSecondTeamChance()));
         if (action < 1) {
+            matchStepDto.setSecondTeamAction(randomizeActionByTeamChance(matchStepDto.getSecondTeamChance()));
             action = randomizeActionByTeamChance(matchStepDto.getFirstTeamChance());
         } else if (matchStepDto.getMatchDto().getPlaySide() != PlaySide.CPU) {
             if (action > 9) {
@@ -135,6 +135,8 @@ public class MatchService {
                 return matchStepDto;
             }
             action = matchStepDto.getFirstTeamAction();
+        } else {
+            matchStepDto.setSecondTeamAction(randomizeActionByTeamChance(matchStepDto.getSecondTeamChance()));
         }
 
         if (matchStepDto.getPosition() == 1) {
