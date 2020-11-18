@@ -1,11 +1,13 @@
 package site.fifa.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import site.fifa.entity.Player;
 import site.fifa.entity.PlayerType;
 import site.fifa.repository.PlayerRepository;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
 
 @Service
@@ -23,7 +25,21 @@ public class PlayerService {
         player.setType(PlayerType.GK.random());
         player.setSpeed(generateValueBetween(1, 100));
 
+        player.setPrice(generateValueBetween(1, 1000));
+
         return player;
+    }
+
+    @PostConstruct
+    @Scheduled(cron = "5 5 12 * * *")
+    public Player createPlayerForTransfer() {
+        Player player = generateRandomPlayer();
+        savePlayer(player);
+        return player;
+    }
+
+    public List<Player> getFreePlayers() {
+        return playerRepository.getByTeamIdIsNull();
     }
 
     public Player generateRandomPlayerByType(PlayerType type) {
@@ -32,8 +48,8 @@ public class PlayerService {
         return player;
     }
 
-    public void savePlayer(Player player) {
-        playerRepository.save(player);
+    public Player savePlayer(Player player) {
+        return playerRepository.save(player);
     }
 
     public List<Player> getByTeamId(Long teamId) {

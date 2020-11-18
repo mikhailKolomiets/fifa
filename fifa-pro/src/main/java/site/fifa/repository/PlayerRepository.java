@@ -11,4 +11,6 @@ public interface PlayerRepository extends CrudRepository<Player, Long> {
 
     List<Player> getByTeamId(Long teamId);
 
+    List<Player> getByTeamIdIsNull();
+
 }
