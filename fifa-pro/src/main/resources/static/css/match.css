@@ -14,3 +14,15 @@ body {
     position:absolute;
     right: 20px
 }
+
+.right-top {
+    position:absolute;
+    right:0px;
+    top:0px
+}
+
+.bottom-center {
+    position:absolute;
+    align:center;
+    bottom:0px;
+}

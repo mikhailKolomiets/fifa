@@ -9,6 +9,9 @@ var lastMatchesData = "";
 var matchIntervalShow;
 var matchShowIndex = 0;
 var leagueGame1 = $("#league-game-1");
+var teamAdmin = $("#team-admin");
+var countryCheck = $("#country-check");
+var teamCheck = $("#team-check");
 hideAll();
 localStorage.setItem("p2p", "false");
 
@@ -229,12 +232,64 @@ localStorage.setItem("p2p", "false");
         });
     });
 
+    teamAdmin.click(function() {
+        hideAll();
+        countryCheck.show();
+        $.ajax({
+            url: 'countries',
+            type: 'GET',
+            success: function (countries) {
+                    countryCheck.empty();
+                    countryCheck.append($('<option>', {
+                        value: 0,
+                        text:  'Выбрать страну...'
+                    }));
+                    for (item in countries) {
+                        countryCheck.append($('<option>', {
+                            value: countries[item].countryId,
+                            text:  countries[item].countryName
+                        }));
+                    }
+            }
+        });
+    });
+
+    countryCheck.change(function() {
+        teamCheck.show();
+        var countryId = $('#country-check option:selected').val();
+        $.ajax({
+            url: 'team/get-by-country/' + countryId,
+            type: 'GET',
+            success: function (teams) {
+                    teamCheck.empty();
+                    teamCheck.append($('<option>', {
+                        value: 0,
+                        text:  'Выбрать команду...'
+                    }));
+                    for (item in teams) {
+                        teamCheck.append($('<option>', {
+                            value: teams[item].id,
+                            text:  teams[item].name
+                        }));
+                    }
+            }
+        });
+    });
+
+    teamCheck.change(function() {
+        var teamId = $('#team-check option:selected').val();
+        localStorage.setItem("teamadm", teamId);
+        window.location.href="team-page.html";
+    });
+
     function hideAll() {
         teamForm.hide();
         message.hide();
         playSelect.hide();
         countryLeague.hide();
         leagueTable.hide();
+        countryCheck.hide();
+        teamCheck.hide();
     }
 
 });
