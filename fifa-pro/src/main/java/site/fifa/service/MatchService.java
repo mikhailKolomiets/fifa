@@ -7,10 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import site.fifa.dto.*;
 import site.fifa.dto.mappers.StatisticDtoRowMapper;
-import site.fifa.entity.LeagueTableItem;
-import site.fifa.entity.Player;
-import site.fifa.entity.PlayerType;
-import site.fifa.entity.Statistic;
+import site.fifa.entity.*;
 import site.fifa.entity.match.GoalsInMatch;
 import site.fifa.entity.match.MatchPlay;
 import site.fifa.entity.match.MatchStatus;
@@ -58,7 +55,7 @@ public class MatchService {
         }
 
         MatchStepDto matchStepDto = new MatchStepDto();
-        matchStepDto.setMatchDto(new MatchDto(match.getId(), PlaySide.CPU,  LocalDate.now(), teamService.getTeamById(firstTeamId), teamService.getTeamById(secondTeamId)));
+        matchStepDto.setMatchDto(new MatchDto(match.getId(), PlaySide.CPU, LocalDate.now(), teamService.getTeamById(firstTeamId), teamService.getTeamById(secondTeamId)));
         matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
         matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
         matchStepDto.getStatisticDto().setFirstTeamName(matchStepDto.getMatchDto().getFirstTeam().getTeam().getName());
@@ -489,12 +486,22 @@ public class MatchService {
         int s = matchStepDto.getGoalSecondTeam();
         leagueTableItemRepository.increaseDataForLeagueTable(f > s ? 1 : 0, f < s ? 1 : 0, f == s ? 1 : 0, f, s, f > s ? 3 : f == s ? 1 : 0,
                 matchStepDto.getMatchDto().getFirstTeam().getTeam().getId(), matchStepDto.getMatchDto().getFirstTeam().getTeam().getLeagueId()
-                );
+        );
         leagueTableItemRepository.increaseDataForLeagueTable(f < s ? 1 : 0, f > s ? 1 : 0, f == s ? 1 : 0, s, f, f > s ? 0 : f == s ? 1 : 3,
                 matchStepDto.getMatchDto().getSecondTeam().getTeam().getId(), matchStepDto.getMatchDto().getFirstTeam().getTeam().getLeagueId()
         );
 
         List<LeagueTableItem> leagueTableItems = leagueTableItemRepository.getByLeagueId(matchStepDto.getMatchDto().getFirstTeam().getTeam().getLeagueId());
+        int firstTeamCoefficient = leagueTableItems.size() - matchStepDto.getMatchDto().getFirstTeam().getLeaguePosition() + 1;
+        int secondTeamCoefficient = leagueTableItems.size() - matchStepDto.getMatchDto().getSecondTeam().getLeaguePosition() + 1;
+        Team firstTeam = matchStepDto.getMatchDto().getFirstTeam().getTeam();
+        Team secondTeam = matchStepDto.getMatchDto().getSecondTeam().getTeam();
+        firstTeam.setMoney(firstTeam.getMoney() + firstTeamCoefficient * (f > s ? 5 : f == s ? 3 : 1));
+        secondTeam.setMoney(secondTeam.getMoney() + secondTeamCoefficient * (s > f ? 5 : f == s ? 3 : 1));
+
+        teamService.updateOrSave(firstTeam);
+        teamService.updateOrSave(secondTeam);
+
         leagueTableItems.sort(Comparator.comparingInt(LeagueTableItem::getPoint).reversed().thenComparing(l -> -l.getGoals()).thenComparing(LeagueTableItem::getGoalLose));
         int i = 0;
         for (LeagueTableItem l : leagueTableItems) {
@@ -607,5 +614,9 @@ public class MatchService {
                     break;
             }
         }
+    }
+
+    private int getPrizeForLeagueMatch(int position, int result) {
+        return result * position;
     }
 }

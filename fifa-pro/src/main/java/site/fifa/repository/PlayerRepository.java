@@ -1,5 +1,6 @@
 package site.fifa.repository;
 
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 import site.fifa.entity.Player;
@@ -12,5 +13,8 @@ public interface PlayerRepository extends CrudRepository<Player, Long> {
     List<Player> getByTeamId(Long teamId);
 
     List<Player> getByTeamIdIsNull();
+
+    @Query(nativeQuery = true, value = "select * from player p where p.team_id is null")
+    List<Player> getAllFree();
 
 }
