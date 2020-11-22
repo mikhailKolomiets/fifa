@@ -36,6 +36,16 @@ public class TeamController {
         return teamService.createNewTeam(request);
     }
 
+    @ApiResponses({@ApiResponse(code = 200, message = "Return team by his id")})
+    @GetMapping("get/{teamId}")
+    public TeamDTO getById(@PathVariable Long teamId) {
+        return teamService.getTeamById(teamId);
+    }
 
+    @ApiResponses({@ApiResponse(code = 200, message = "Return teams of country")})
+    @GetMapping("get-by-country/{countryId}")
+    public List<Team> getByCountry(@PathVariable Long countryId) {
+        return teamService.getByCountryId(countryId);
+    }
 
 }

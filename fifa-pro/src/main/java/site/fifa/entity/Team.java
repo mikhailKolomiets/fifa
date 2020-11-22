@@ -21,4 +21,6 @@ public class Team {
     private String name;
 
     private Long leagueId;
+
+    private int money;
 }
