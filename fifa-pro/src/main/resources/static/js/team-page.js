@@ -49,10 +49,10 @@ var infoShow = $("#info");
     });
 
     function tableGenerate(players, change, preName) {
-                var tableContent = preName + '<table>  <tr> <th>NAME</th> <th>SKILL</th> <th>SPEED</th> <th>AGE</th> <th>POSITION</th> <th>PRICE</th> <th>CHANGE</th> <th></th> </tr>';
+                var tableContent = preName + '<table>  <tr> <th>NAME</th> <th>SKILL</th> <th>SPEED</th> <th>EXP</th> <th>AGE</th> <th>POSITION</th> <th>PRICE</th> <th>CHANGE</th> <th></th> </tr>';
                 for(i in players) {
                     tableContent += '<tr><td> <input type = "text" class="playername" value="'+players[i].name+'"/></td>' +
-                    '<td> <input type = "hidden" class="playerid" value="'+players[i].id+'"/>' + players[i].skill + '</td> <td>' + players[i].speed + '</td>  <td>' +
+                    '<td> <input type = "hidden" class="playerid" value="'+players[i].id+'"/>' + players[i].skill + '</td> <td>' + players[i].speed + '</td> <td>' + players[i].exp + '</td> <td>' +
                     players[i].age + '</td> <td>' + players[i].type + '</td>' +
                     '<td> <input type = "text" class="playerprice" value="' + players[i].price + '"/></td>'+
                     ' <td>' + generateSelectForReserve(change, players[i].type) + '</td>' +
