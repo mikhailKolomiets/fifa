@@ -12,9 +12,7 @@ import site.fifa.entity.match.GoalsInMatch;
 import site.fifa.entity.match.MatchPlay;
 import site.fifa.entity.match.MatchStatus;
 import site.fifa.entity.match.MatchType;
-import site.fifa.repository.GoalsInMatchRepository;
-import site.fifa.repository.LeagueTableItemRepository;
-import site.fifa.repository.MatchRepository;
+import site.fifa.repository.*;
 
 import javax.annotation.PostConstruct;
 import java.awt.*;
@@ -37,6 +35,8 @@ public class MatchService {
     private LeagueTableItemRepository leagueTableItemRepository;
     @Autowired
     private GoalsInMatchRepository goalsInMatchRepository;
+    @Autowired
+    private PlayerRepository playerRepository;
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
@@ -86,6 +86,9 @@ public class MatchService {
                 statisticService.saveStatistic(new Statistic(matchId, matchStepDto.getStatisticDto()));
                 matchRepository.updateMatchStatusById(MatchStatus.FINISHED, matchId);
                 updateLeagueTable(matchStepDto);
+                if (action > 0) {
+                    updatePlayersExperience(matchStepDto);
+                }
             }
             return matchStepDto;
         }
@@ -424,6 +427,43 @@ public class MatchService {
         return lastMatches;
     }
 
+    public void updatePlayersExperience(MatchStepDto matchStepDto) {
+        List<Player> players = matchStepDto.getMatchDto().getFirstTeam().getPlayers();
+        players.addAll(matchStepDto.getMatchDto().getSecondTeam().getPlayers());
+
+        int exp;
+
+        for (Player player : players) {
+            exp = player.getExp() + countAndUpdatePlayerExperience(player);
+            if (exp > 99) {
+                exp = 0;
+                if (Math.random() > 0.5) {
+                    player.setSpeed(player.getSpeed() + 1);
+                } else {
+                    player.setSkill(player.getSkill() + 1);
+                }
+            }
+            player.setExp(exp);
+            playerRepository.save(player);
+        }
+
+    }
+
+    private int countAndUpdatePlayerExperience(Player player) {
+        if (player.getAge() < 21) {
+            return (int) (Math.random() * 15) + 1;
+        } else if (player.getAge() < 25) {
+            return (int) (Math.random() * 10) + 1;
+        } if (player.getAge() < 30) {
+            return (int) (Math.random() * 7) + 1;
+        } if (player.getAge() < 35) {
+            return (int) (Math.random() * 5) + 1;
+        } if (player.getAge() < 40) {
+            return (int) (Math.random() * 3) + 1;
+        }
+        return 1;
+    }
+
     private Player getRandomPlayerByType(List<Player> players, PlayerType type) {
         List<Player> filtered = players.stream().filter(player -> player.getType() == type).collect(Collectors.toList());
         return filtered.get((int) (Math.random() * filtered.size()));
@@ -616,7 +656,4 @@ public class MatchService {
         }
     }
 
-    private int getPrizeForLeagueMatch(int position, int result) {
-        return result * position;
-    }
 }
