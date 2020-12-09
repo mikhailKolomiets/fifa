@@ -40,7 +40,7 @@ public class TeamServiceTest {
         // try create same team
         assertNull(teamService.createNewTeam(newTeamCreateRequest));
 
-        assertEquals(teamDTO, teamService.getTeamById(teamDTO.getTeam().getId()));
+        assertEquals(teamDTO.getTeam(), teamService.getTeamById(teamDTO.getTeam().getId()).getTeam());
     }
 
     @Test

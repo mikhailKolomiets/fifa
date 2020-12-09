@@ -9,8 +9,10 @@ import site.fifa.repository.PlayerRepository;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class PlayerService {
@@ -92,6 +94,23 @@ public class PlayerService {
 
     public List<Player> getByTeamId(Long teamId) {
         return playerRepository.getByTeamId(teamId);
+    }
+
+    public List<Player> sortPlayersForGame(List<Player> players) {
+        List<Player> result = new ArrayList<>();
+        result.add(players.stream().filter(player -> player.getType() == PlayerType.GK).findAny().orElse(null));
+        result.addAll(players.stream().filter(player -> player.getType() == PlayerType.CD).collect(Collectors.toList()));
+        result.addAll(players.stream().filter(player -> player.getType() == PlayerType.MD).collect(Collectors.toList()));
+        result.addAll(players.stream().filter(player -> player.getType() == PlayerType.ST).collect(Collectors.toList()));
+
+        if (result.size() != 11 || result.get(0) == null) {
+            return players;
+        }
+
+        result.add(6, result.remove(10));
+        result.add(8, result.remove(10));
+
+        return result;
     }
 
     public Player buyPlayer(Player player, Long teamId) {
