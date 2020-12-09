@@ -394,7 +394,7 @@ public class MatchService {
 
     public List<MatchDto> getMatchesForPlayLeaguesGame() {
         List<MatchDto> result = new ArrayList<>();
-        List<MatchPlay> matchPlays = matchRepository.getForLeaguePlay();
+        List<MatchPlay> matchPlays = matchRepository.getByStarted(LocalDate.now());
         for (MatchPlay m : matchPlays) {
             result.add(new MatchDto(m.getId(), PlaySide.CPU, m.getStarted(), teamService.getTeamById(m.getFirstTeamId()), teamService.getTeamById(m.getSecondTeamId())));
         }

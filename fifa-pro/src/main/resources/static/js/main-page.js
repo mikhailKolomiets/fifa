@@ -41,14 +41,10 @@ localStorage.setItem("p2p", "false");
                                 $.ajax({
                                     url: 'match/get-for-league-games',
                                     success: function (games) {
-                                        if (games.length > 0) {
-                                            statGame(games[0], $("#league-game-1"))
-                                        }
-                                        if (games.length > 1) {
-                                            statGame(games[1], $("#league-game-2"))
-                                        }
-                                        if (games.length > 2) {
-                                            statGame(games[2], $("#league-game-3"))
+                                        for(i=0; i < games.length; i++) {
+                                            let div = $('<div></div>').attr('id', `league-game-${i+1}`);
+                                            $(`#league-games`).append(div);
+                                            statGame(games[i], $(`#league-game-${i+1}`));
                                         }
                                     }
                                 });

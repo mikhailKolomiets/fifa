@@ -33,7 +33,7 @@ public class MatchController {
 
     @ApiResponses({@ApiResponse(code = 200, message = "Return next three games in all leagues")})
     @GetMapping("get-for-league-games")
-    public List<MatchDto> getThreeFirstMatchesInLeague() {
+    public List<MatchDto> getThreeFirstMatchesInLeagueOrToday() {
         return matchService.getMatchesForPlayLeaguesGame();
     }
 
