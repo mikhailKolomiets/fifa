@@ -59,7 +59,7 @@ public class TeamService {
         List<Player> teamStuff = playerService.getByTeamId(teamId);
 
         return new TeamDTO(leagueTableItem == null ? 0 : leagueTableItem.getPosition(),
-                teamRepository.findById(teamId).orElse(null), teamStuff.stream().filter(p -> !p.isReserve()).collect(Collectors.toList()),
+                teamRepository.findById(teamId).orElse(null), sortPlayersForGame(teamStuff.stream().filter(p -> !p.isReserve()).collect(Collectors.toList())),
                 teamStuff.stream().filter(Player::isReserve).collect(Collectors.toList()));
     }
 
@@ -85,6 +85,10 @@ public class TeamService {
             updateOrSave(team);
             playerRepository.save(player);
         }
+    }
+
+    public List<Player> sortPlayersForGame(List<Player> players) {
+        return playerService.sortPlayersForGame(players);
     }
 
     private List<Player> makeTeamPlayers(Team team) {
