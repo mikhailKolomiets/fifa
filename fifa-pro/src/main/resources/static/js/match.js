@@ -15,7 +15,6 @@ var stompClient;
             $("#title-change").text(data.firstTeam.team.name + " 0:0 " + data.secondTeam.team.name);
             localStorage.setItem("matchId", data.matchId);
             statusMatch.text("Матч начался");
-                            $("#show-area").text(". . . 0 -> . . .");
                             action1.text('Атаковать');
                             action2.text('Укрепиться в центре');
                             action3.text('Пас назад');
@@ -139,20 +138,14 @@ var stompClient;
         $(".ball-go img").addClass('green-ball').removeClass('red-ball');
         $("#playerName").text(data.firstPlayer.name);
             if (data.position == 2) {
-            //ballPosition = 500;
-                result = ". . . 0 -> . . .";
                 action1.text('Атаковать');
                 action2.text('Укрепиться в центре');
                 action3.text('Пас назад');
             } else if (data.position == 1) {
-                //ballPosition = 200;
-                result = "0 -> . . . . . .";
                 action1.text('Выбить в центр');
                 action2.text('Пас');
                 action3.text('Пас');
             } else if (data.position == 3) {
-            //ballPosition = 950;
-                result = ". . . . . . 0 ->";
                 action1.text('Удар по воротам');
                 action2.text('Подойти поближе');
                 action3.text('Пас назад');
@@ -161,20 +154,14 @@ var stompClient;
         $(".ball-go img").addClass('red-ball').removeClass('green-ball');
         $("#playerName").text(data.secondPlayer.name);
             if (data.position == 2) {
-            //ballPosition = 550;
-                result = ". . . <- 0 . . .";
                 action1.text('Не пропускать');
                 action2.text('Пытаться забрать мяч');
                 action3.text('Блокировать передачи');
             } else if (data.position == 1) {
-            //ballPosition = 100;
-                   result = "<- 0 . . . . . .";
                 action1.text('Усиление вратаря');
                 action2.text('Отбор');
                 action3.text('Блок передач');
             } else if (data.position == 3) {
-            //ballPosition = 850;
-                   result = ". . . . . . <- 0";
                 action1.text('Не давать вынос');
                 action2.text('Отбор');
                 action3.text('Отбор');
@@ -183,7 +170,6 @@ var stompClient;
     writeStatistic(data.statisticDto, data.matchDto.firstTeam.team.name, data.matchDto.secondTeam.team.name);
 
         $(".ball-go").animate({left: data.ballPosition.x, top: data.ballPosition.y});
-        $("#show-area").text(result);
     }
 
     function writeStatistic(stat, ft, st) {
