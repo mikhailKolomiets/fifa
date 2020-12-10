@@ -385,7 +385,6 @@ public class MatchService {
         for (MatchPlay matchPlay : matchPlayList) {
             matchDto = startMatchWithPC(matchPlay.getFirstTeamId(), matchPlay.getSecondTeamId(), true);
             matchStepDto = makeStepWithCPU(matchDto.getMatchId(), -1);
-            System.out.println("play-match");
             while (!matchStepDto.getLastStepLog().equals(matchStepDto.showGoals())) {
                 matchStepDto = makeStepWithCPU(matchDto.getMatchId(), -1);
             }
