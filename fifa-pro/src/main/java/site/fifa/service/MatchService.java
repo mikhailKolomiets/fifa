@@ -403,7 +403,7 @@ public class MatchService {
         return result;
     }
 
-    //@PostConstruct
+    @PostConstruct
     @Scheduled(cron = "5 5 * * * *")
     public List<StatisticDto> updateLastLeagueMatches() {
         // amount matches in the result
