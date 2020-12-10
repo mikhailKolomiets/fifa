@@ -18,6 +18,7 @@ import javax.annotation.PostConstruct;
 import java.awt.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -654,6 +655,19 @@ public class MatchService {
                     break;
             }
         }
+    }
+
+    public List<Point> returnAllPosition() {
+        List<Point> result = new ArrayList<>(Arrays.asList(
+                new Point(100, 270),new Point(200, 330),new Point(200, 450),new Point(200, 200),
+                new Point(200, 60),new Point(500, 270),new Point(950, 270),new Point(500, 120),
+                new Point(950, 120),new Point(500, 420),new Point(950, 420),new Point(1050, 270),
+                new Point(950, 330),new Point(950, 450),new Point(950, 200),new Point(950, 60),
+                new Point(550, 270),new Point(200, 270),new Point(550, 120),new Point(200, 120),
+                new Point(550, 420),new Point(200, 420)
+                ));
+
+        return result;
     }
 
 }

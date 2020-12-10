@@ -10,6 +10,7 @@ import site.fifa.dto.StatisticDto;
 import site.fifa.entity.match.MatchPlay;
 import site.fifa.service.MatchService;
 
+import java.awt.*;
 import java.util.List;
 
 @RestController
@@ -47,6 +48,11 @@ public class MatchController {
     @GetMapping("last-league-matches")
     public List<StatisticDto> lastPlayedMatches() {
         return matchService.getLastMatches();
+    }
+
+    @GetMapping("all-point")
+    public List<Point> getAllPointsForPlayers() {
+        return matchService.returnAllPosition();
     }
 
 }
