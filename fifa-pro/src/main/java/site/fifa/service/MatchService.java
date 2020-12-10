@@ -376,6 +376,7 @@ public class MatchService {
     @PostConstruct
     @Scheduled(cron = "5 12 15 * * *")
     public void playAllCreatedMatchesAfterToday() {
+        System.out.println("try to play all matches");
         List<MatchPlay> matchPlayList = matchRepository.getAllFromPlayInLeague(LocalDate.now());
         MatchDto matchDto;
         MatchStepDto matchStepDto;
@@ -391,6 +392,7 @@ public class MatchService {
             }
             System.out.println(matchStepDto.showGoals());
         }
+        System.out.println("all matches played");
     }
 
     public List<MatchDto> getMatchesForPlayLeaguesGame() {
