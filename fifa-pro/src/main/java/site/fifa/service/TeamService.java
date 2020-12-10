@@ -78,9 +78,20 @@ public class TeamService {
         if (player != null && team != null) {
             player.setReserve(true);
             int price = player.getPrice();
+            team.setMoney(team.getMoney() - price);
+
+            if (player.getTeamId() != null) {
+                Team teamFrom = teamRepository.findById(player.getTeamId()).orElse(null);
+                if (teamFrom != null) {
+                    price -= price/10 + 1;
+                    price = Math.max(price, 0);
+                    teamFrom.setMoney(teamFrom.getMoney() + price);
+                    updateOrSave(teamFrom);
+                }
+            }
+
             player.setPrice(0);
             player.setTeamId(teamId);
-            team.setMoney(team.getMoney() - price);
 
             updateOrSave(team);
             playerRepository.save(player);
