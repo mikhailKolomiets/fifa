@@ -35,7 +35,7 @@ public class LeagueService {
      * Every friday check start leagues in the all countries.
      * The league contain from 5 to 25 team
      */
-    //@PostConstruct
+    @PostConstruct
     @Scheduled(cron = "5 13 21 * * FRI")
     public void startLeagues() {
         countryRepository.findAll().forEach(this::startLeagueByCountry);
