@@ -397,6 +397,7 @@ public class MatchService {
         List<MatchDto> result = new ArrayList<>();
         List<MatchPlay> matchPlays = matchRepository.getByStarted(LocalDate.now());
         for (MatchPlay m : matchPlays) {
+            if (m.getStatus() == MatchStatus.CREATED)
             result.add(new MatchDto(m.getId(), PlaySide.CPU, m.getStarted(), teamService.getTeamById(m.getFirstTeamId()), teamService.getTeamById(m.getSecondTeamId())));
         }
         result.addAll(0, matchStepDtos.stream().filter(msd -> msd.getMatchDto().getPlaySide() == PlaySide.FiRST_TEAM).map(MatchStepDto::getMatchDto).collect(Collectors.toList()));
