@@ -381,16 +381,14 @@ public class MatchService {
         MatchDto matchDto;
         MatchStepDto matchStepDto;
         // clear all matches in server
-        System.out.println("clear");
         matchStepDtos.clear();
-        System.out.println("got all");
         matchRepository.resetAllMatches();
-        System.out.println("preparing");
         for (MatchPlay matchPlay : matchPlayList) {
             matchDto = startMatchWithPC(matchPlay.getFirstTeamId(), matchPlay.getSecondTeamId(), true);
             matchStepDto = makeStepWithCPU(matchDto.getMatchId(), -1);
             System.out.println("play-match");
             while (!matchStepDto.getLastStepLog().equals(matchStepDto.showGoals())) {
+                System.out.println("step " + matchStepDto.getStep());
                 matchStepDto = makeStepWithCPU(matchDto.getMatchId(), -1);
             }
             System.out.println(matchStepDto.showGoals());
