@@ -382,7 +382,6 @@ public class MatchService {
         // clear all matches in server
         matchStepDtos.clear();
         matchRepository.resetAllMatches();
-
         for (MatchPlay matchPlay : matchPlayList) {
             matchDto = startMatchWithPC(matchPlay.getFirstTeamId(), matchPlay.getSecondTeamId(), true);
             matchStepDto = makeStepWithCPU(matchDto.getMatchId(), -1);
