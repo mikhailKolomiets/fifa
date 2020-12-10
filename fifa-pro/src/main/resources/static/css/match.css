@@ -1,14 +1,37 @@
 body {
   background-color: #F5F5F5;
 }
-
 .red {
     color : red
 }
 .ball-go {
     position:absolute;
+    z-index: 10;
     left: 500px;
     top: 270px;
+}
+.ball-go img {
+    border-radius: 50%;
+}
+.red-ball {
+    border: 5px solid red;
+}
+.green-ball {
+    border: 5px solid green;
+}
+.player {
+    position: absolute;
+    z-index: 2;
+    width: 0;
+    height: 0;
+    border: 8px solid black;
+    border-radius: 50%;
+}
+.player-1 {
+    border-color: green;
+}
+.player-2 {
+    border-color: red;
 }
 .stati {
     position:absolute;
@@ -26,3 +49,4 @@ body {
     align:center;
     bottom:0px;
 }
+

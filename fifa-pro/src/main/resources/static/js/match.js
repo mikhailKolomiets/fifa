@@ -63,6 +63,32 @@ var stompClient;
         }
     });
 
+        $.ajax({
+            url: '/match/all-point',
+            type: "GET",
+            success: function (data) {
+                for(j=0; j < data.length; j++) {
+                let i = j;
+                let div = $("<div class='player'></div>").attr('id', `player-${i}`);
+                    $("#players").append(div);
+
+                    if (i < 11) {
+                        $(`#player-${i}`).addClass('player-1');
+                    } else {
+                        $(`#player-${i}`).addClass('player-2');
+                    }
+                    $(`#player-${i}`).css({'left': data[i].x + 30, 'top': data[i].y + 30});
+                }
+//            $("#players").html(getLog(data));
+//            $("#title-change").text(data.matchDto.firstTeam.team.name + " " + data.goalFirstTeam + ":" + data.goalSecondTeam +
+//                " " + data.matchDto.secondTeam.team.name);
+//                if (data.step > 90 && data.additionTime == -2) {
+//                    mpr.show();
+//                }
+
+            }
+        });
+
     function changeButton(action) {
         $.ajax({
             url: '/match/step/' + localStorage.getItem("matchId") + "/" + action,
@@ -110,6 +136,7 @@ var stompClient;
         }
 
         if (data.firstTeamBall) {
+        $(".ball-go img").addClass('green-ball').removeClass('red-ball');
         $("#playerName").text(data.firstPlayer.name);
             if (data.position == 2) {
             //ballPosition = 500;
@@ -131,6 +158,7 @@ var stompClient;
                 action3.text('Пас назад');
             }
         } else {
+        $(".ball-go img").addClass('red-ball').removeClass('green-ball');
         $("#playerName").text(data.secondPlayer.name);
             if (data.position == 2) {
             //ballPosition = 550;
