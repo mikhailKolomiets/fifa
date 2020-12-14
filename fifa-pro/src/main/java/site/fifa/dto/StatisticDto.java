@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import site.fifa.entity.match.GoalsInMatch;
 
 import java.awt.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 
 /**
@@ -26,6 +27,7 @@ public class StatisticDto {
     private Point foul = new Point();
     private Point stepHold = new Point();
     private ArrayList<GoalsInMatch> goalsList = new ArrayList<>();
+    private LocalDate date;
 
     /**
      * calculate the percentage ball hold to this according the step ball hold team

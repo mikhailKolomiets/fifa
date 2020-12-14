@@ -16,6 +16,8 @@ hideAll();
 localStorage.setItem("p2p", "false");
 
     $("#play").click(function() {
+    allMenuShow();
+    $("#play").hide();
         $.ajax({
                     url: '/team/get-team',
                     success: function (data) {
@@ -79,6 +81,8 @@ localStorage.setItem("p2p", "false");
     });
 
     $("#team-create").click(function() {
+    allMenuShow();
+    $("#team-create").hide();
         hideAll();
         teamForm.show();
         $.ajax({
@@ -104,6 +108,8 @@ localStorage.setItem("p2p", "false");
     });
 
         $("#leagues").click(function() {
+            allMenuShow();
+            $("#leagues").hide();
             hideAll();
             countryLeague.show();
             leagueTable.show();
@@ -134,6 +140,7 @@ localStorage.setItem("p2p", "false");
         success : function(table) {
             if (table.length == 0) {
                 leagueTable.text($('#country-league option:selected').text() + " пока не проводит лиг");
+                $("#league-games-by-id").hide();
             } else {
                 var tableContent = table[0].leagueName + '<table>  <tr> <th>Место</th> <th>Команда</th><th>Сыграно</th> <th>Выиграшей</th> <th>Ничьи</th> <th>Проиграши</th> <th>Забито</th> <th>Пропущено</th><th>Очки</th> </tr>';
                 for(unit in table) {
@@ -143,10 +150,28 @@ localStorage.setItem("p2p", "false");
                 }
                 tableContent +='</table>';
                 leagueTable.html(tableContent);
+                showLeagueGames(table[0].team.leagueId);
             }
         }
     });
     });
+
+    function showLeagueGames(leagueId) {
+    $.ajax({
+        url : "match/league-games/" + leagueId,
+        type : "GET",
+        success : function(data) {
+            if (data.length > 0) {
+                $("#league-games-by-id").show();
+            }
+            leagueGames = "<br>GAMES<br>"
+            for (i in data) {
+                leagueGames += data[i].date + ": " + data[i].firstTeamName + " " + (data[i].percentageHoldBall.x == 0 ? "-" : data[i].goals.x + ":" + data[i].goals.y) + " " + data[i].secondTeamName + "<br>"
+            }
+        $("#league-games-by-id").html(leagueGames);
+        }
+    });
+    }
 
     $.ajax({
         url : "match/last-league-matches",
@@ -229,6 +254,8 @@ localStorage.setItem("p2p", "false");
     });
 
     teamAdmin.click(function() {
+        allMenuShow();
+        teamAdmin.hide();
         hideAll();
         countryCheck.show();
         $.ajax({
@@ -278,6 +305,13 @@ localStorage.setItem("p2p", "false");
         window.location.href="team-page.html";
     });
 
+    function allMenuShow() {
+        $("#play").show();
+        $("#team-create").show();
+        $("#leagues").show();
+        teamAdmin.show();
+    }
+
     function hideAll() {
         teamForm.hide();
         message.hide();
@@ -286,6 +320,7 @@ localStorage.setItem("p2p", "false");
         leagueTable.hide();
         countryCheck.hide();
         teamCheck.hide();
+        $("#league-games-by-id").hide();
     }
 
 });

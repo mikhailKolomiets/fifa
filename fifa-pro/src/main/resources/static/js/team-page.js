@@ -4,22 +4,28 @@ var teamId = localStorage.getItem("teamadm");
 var stuff = $("#team-stuff");
 var transfer = $("#transfer");
 var infoShow = $("#info");
+var players;
+var allPlayers;
+var teamDataMain;
+var typeIndex = 0;
+var typeValues = ["GK", "CD", "MD", "ST"];
 
     $.ajax({
         url : "team/get/" + teamId,
         type : "GET",
         success : function(teamData) {
+            teamDataMain = teamData;
             if (teamData.length == 0) {
                 stuff.text("no team");
             } else {
                 var money = teamData.team.money;
                 $("#title").text(teamData.team.name);
-                var players = teamData.players;
-                var tableContent = tableGenerate(players, teamData.reserve, "MAIN STUFF");
+                var staff = teamData.players;
+                var tableContent = tableGenerate(staff, teamData.reserve, "MAIN STUFF");
 
-                players = teamData.reserve;
-                if (players.length > 0) {
-                    tableContent += tableGenerate(players, teamData.players, "RESERVE STUFF");
+                staff = teamData.reserve;
+                if (staff.length > 0) {
+                    tableContent += tableGenerate(staff, teamData.players, "RESERVE STUFF");
                 }
 
                 stuff.html(tableContent);
@@ -27,25 +33,58 @@ var infoShow = $("#info");
                     $.ajax({
                         url : "player/offers",
                         type : "GET",
-                        success : function(players) {
-                            var tableContent = teamData.team.name + ' have ' + money + '<table>  <tr> <th>NAME</th> <th>SKILL</th> <th>SPEED</th> <th>AGE</th> <th>POSITION</th> <th>PRICE</th> <th></th> </tr>';
-                            for(i in players) {
-                                tableContent += '<tr><td class="playername">'+players[i].name+'</td>' +
-                                '<td> <input type = "hidden" class="playerid" value="'+players[i].id+'"/>' + players[i].skill + '</td> <td>' + players[i].speed + '</td>  <td>' +
-                                players[i].age + '</td> <td>' + players[i].type + '</td>' +
-                                '<td class="playerprice">' + players[i].price + '</td>';
-                                if (money >= players[i].price) {
-                                    tableContent += ' <td> <input type="button" value="buy" class="buy"/> </td> </tr>';
-                                } else {
-                                    tableContent += ' <td></td> </tr>'
-                                }
-                            }
-                            tableContent += '</table>';
-                            transfer.html(tableContent);
+                        success : function(data) {
+                            players = allPlayers = data;
+                            transferTableGenerate();
                         }
                     });
             }
         }
+    });
+
+    function transferTableGenerate() {
+        var tableContent = teamDataMain.team.name + ' have ' + teamDataMain.team.money + '<table>  <tr><th>NAME</th> <th id="skill" class="sort">SKILL</th> <th id="speed" class="sort">SPEED</th> <th id="age" class="sort">AGE</th> <th id="type" class="sort">POSITION</th> <th id="price" class="sort">PRICE</th> <th></th> </tr>';
+                for(i = 0; i < 20; i++) {
+                tableContent += '<tr><td class="playername">'+players[i].name+'</td>' +
+                '<td> <input type = "hidden" class="playerid" value="'+players[i].id+'"/>' + players[i].skill + '</td> <td>' + players[i].speed + '</td>  <td>' +
+                players[i].age + '</td> <td>' + players[i].type + '</td>' +
+                '<td class="playerprice">' + players[i].price + '</td>';
+                if (teamDataMain.team.money >= players[i].price) {
+                    tableContent += ' <td> <input type="button" value="buy" class="buy"/> </td> </tr>';
+                } else {
+                tableContent += ' <td></td> </tr>'
+            }
+        }
+        tableContent += '</table>';
+        transfer.html(tableContent);
+    }
+
+    function offersSort(sortType) {
+        switch (sortType) {
+            case "skill": players.sort((pl1, pl2) => pl1.skill < pl2.skill ? 1 : -1);
+                break;
+            case "speed": players.sort((pl1, pl2) => pl1.speed < pl2.speed ? 1 : -1);
+                break;
+            case "age": players.sort((pl1, pl2) => pl1.age > pl2.age ? 1 : -1);
+                break;
+            case "price": players.sort((pl1, pl2) => pl1.price > pl2.price ? 1 : -1);
+                break;
+            case "type":
+                players = allPlayers;
+                players = players.filter(pl => pl.type === typeValues[typeIndex]);
+//                players.sort((pl1, pl2) => {
+//                return pl2.type === typeValues[typeIndex] ? 1 : -1;
+//                });
+                typeIndex++;
+                typeIndex = typeIndex < typeValues.length ? typeIndex : 0;
+                break;
+        }
+    }
+
+    $(document).on('click', "[class^=sort]", function() {
+        var sortType = $(this).attr("id");
+        offersSort(sortType);
+        transferTableGenerate();
     });
 
     function tableGenerate(players, change, preName) {

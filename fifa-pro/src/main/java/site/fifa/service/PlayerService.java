@@ -34,10 +34,12 @@ public class PlayerService {
         return player;
     }
 
+    // todo on production after update update fifa.player set reserve = 1 where team_id is null ;
     @PostConstruct
     @Scheduled(cron = "5 5 12 * * *")
     public Player createPlayerForTransfer() {
         Player player = generateRandomPlayer();
+        player.setReserve(true);
         savePlayer(player);
         return player;
     }
@@ -80,16 +82,7 @@ public class PlayerService {
     }
 
     public List<Player> getBestOffers() {
-        List<Player> data = playerRepository.getAllFree();
-        data.sort(Comparator.comparingInt(Player::getSkill).reversed());
-        int amountPlayers = data.size();
-        amountPlayers = Math.min(amountPlayers, 5);
-        List<Player> result = new ArrayList<>(data.subList(0, amountPlayers));
-        data.sort(Comparator.comparingInt(Player::getSpeed).reversed());
-        result.addAll(data.subList(0, amountPlayers));
-        data.sort(Comparator.comparingInt(Player::getPrice));
-        result.addAll(data.subList(0, amountPlayers));
-        return result;
+        return playerRepository.getAllFree();
     }
 
     public List<Player> getByTeamId(Long teamId) {
