@@ -7,6 +7,7 @@ import site.fifa.dto.UserDTO;
 import site.fifa.entity.User;
 import site.fifa.repository.UserRepository;
 
+import javax.servlet.ServletRequest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,9 +20,15 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private ServletRequest servletRequest;
+
     private List<UserDTO> userOnline = new ArrayList<>();
 
     public UserDTO createUser(User user) {
+
+        System.out.println(servletRequest.getRemoteAddr());
+        System.out.println(servletRequest.getLocalAddr());
 
         User savesUser = userRepository.findByName(user.getName());
 
