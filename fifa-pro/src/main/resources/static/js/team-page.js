@@ -34,7 +34,8 @@ var typeValues = ["GK", "CD", "MD", "ST"];
                         url : "player/offers",
                         type : "GET",
                         success : function(data) {
-                            players = allPlayers = data;
+                            players = data;
+                            allPlayers = data;
                             transferTableGenerate();
                         }
                     });
@@ -45,7 +46,7 @@ var typeValues = ["GK", "CD", "MD", "ST"];
     function transferTableGenerate() {
         var tableContent = teamDataMain.team.name + ' have ' + teamDataMain.team.money + '<table>  <tr><th>NAME</th> <th id="skill" class="sort">SKILL</th> <th id="speed" class="sort">SPEED</th> <th id="age" class="sort">AGE</th> <th id="type" class="sort">POSITION</th> <th id="price" class="sort">PRICE</th> <th></th> </tr>';
                 for(i = 0; i < 20; i++) {
-                tableContent += '<tr><td class="playername">'+players[i].name+'</td>' +
+                tableContent += '<tr><td class="playername">' + players[i].name + '</td>' +
                 '<td> <input type = "hidden" class="playerid" value="'+players[i].id+'"/>' + players[i].skill + '</td> <td>' + players[i].speed + '</td>  <td>' +
                 players[i].age + '</td> <td>' + players[i].type + '</td>' +
                 '<td class="playerprice">' + players[i].price + '</td>';
