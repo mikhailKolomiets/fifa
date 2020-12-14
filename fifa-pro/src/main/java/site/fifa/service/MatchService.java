@@ -5,6 +5,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import site.fifa.constants.GameConstants;
 import site.fifa.dto.*;
 import site.fifa.dto.mappers.StatisticDtoRowMapper;
 import site.fifa.entity.*;
@@ -407,22 +408,35 @@ public class MatchService {
     @PostConstruct
     @Scheduled(cron = "5 5 * * * *")
     public List<StatisticDto> updateLastLeagueMatches() {
-        // amount matches in the result
-        int amount = 5;
 
-        String sql = "select s.*, ft.name as ftm, st.name as stm  from match_play mp " +
+        String sql = "select s.*, ft.name as ftm, st.name as stm, mp.started from match_play mp " +
                 "inner join team ft on ft.id=mp.first_team_id " +
                 "inner join team st on st.id=mp.second_team_id " +
                 "inner join statistic s on s.match_id = mp.id " +
                 "where mp.type = 1 and mp.status = 2 order by mp.started desc limit ?";
 
         lastMatches.clear();
-        lastMatches.addAll(jdbcTemplate.query(sql, new Object[]{amount}, new StatisticDtoRowMapper()));
+        lastMatches.addAll(jdbcTemplate.query(sql, new Object[]{GameConstants.AMOUNT_LAST_LEAGUE_GAME_FOR_STATISTIC}, new StatisticDtoRowMapper()));
         for (StatisticDto s : lastMatches) {
             s.getGoalsList().addAll(goalsInMatchRepository.getByMatchId(s.getMatchId()));
         }
         System.out.println("matches statistic updated");
         return lastMatches;
+    }
+
+    public List<StatisticDto> getLeagueStatisticOfMatches (Long leagueId) {
+        String sql = "select s.*, ft.name as ftm, st.name as stm, mp.started from match_play mp " +
+                "inner join team ft on ft.id=mp.first_team_id " +
+                "inner join team st on st.id=mp.second_team_id " +
+                "left join statistic s on s.match_id = mp.id " +
+                "where mp.type = 1 and ft.league_id = ? and mp.started > '" + LocalDate.now().minusDays(2) + "' and mp.started < '" + LocalDate.now().plusDays(2) + "'";
+
+        List<StatisticDto> result = new ArrayList<>(jdbcTemplate.query(sql, new Object[]{leagueId}, new StatisticDtoRowMapper()));
+        for (StatisticDto s : result) {
+            s.getGoalsList().addAll(goalsInMatchRepository.getByMatchId(s.getMatchId()));
+        }
+
+        return result;
     }
 
     public ArrayList<StatisticDto> getLastMatches() {

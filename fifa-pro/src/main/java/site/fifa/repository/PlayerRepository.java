@@ -14,7 +14,7 @@ public interface PlayerRepository extends CrudRepository<Player, Long> {
 
     List<Player> getByTeamIdIsNull();
 
-    @Query(nativeQuery = true, value = "select * from player p where p.price > 0")
+    @Query(nativeQuery = true, value = "select * from player p where p.price > 0 and p.reserve = 1")
     List<Player> getAllFree();
 
 }

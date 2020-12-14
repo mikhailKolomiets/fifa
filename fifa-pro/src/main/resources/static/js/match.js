@@ -1,7 +1,4 @@
 $(document).ready(function () {
-action1 = $("#action1");
-action2 = $("#action2");
-action3 = $("#action3");
 statusMatch = $("#match-status");
 mpr = $("#main-page-ref");
 ballPosition = 500;
@@ -15,11 +12,9 @@ var stompClient;
             $("#title-change").text(data.firstTeam.team.name + " 0:0 " + data.secondTeam.team.name);
             localStorage.setItem("matchId", data.matchId);
             statusMatch.text("Матч начался");
-                            action1.text('Атаковать');
-                            action2.text('Укрепиться в центре');
-                            action3.text('Пас назад');
-                            mpr.hide();
-                            if (localStorage.getItem("p2p") == "first" || localStorage.getItem("p2p") == "second") {
+            $("#player-arrows-2").hide();
+            mpr.hide();
+            if (localStorage.getItem("p2p") == "first" || localStorage.getItem("p2p") == "second") {
                                 socket = new SockJS('/fifa-stomp');
                                         stompClient = Stomp.over(socket);
                                         stompClient.connect({}, function (frame) {
@@ -38,29 +33,23 @@ var stompClient;
         }
     });
 
-    action1.click(function() {
-        if (localStorage.getItem("p2p") == "false") {
-            changeButton(1);
-        } else {
-            p2pgame(1);
-        }
-    });
+    $("#action-1").click(f => makeAction(1));
+    $("#action-2").click(f => makeAction(2));
+    $("#action-3").click(f => makeAction(2));
+    $("#action-4").click(f => makeAction(3));
+    $("#action-5").click(f => makeAction(3));
+    $("#action-6").click(f => makeAction(2));
+    $("#action-7").click(f => makeAction(2));
+    $("#action-8").click(f => makeAction(1));
 
-    action2.click(function() {
+    function makeAction(i) {
         if (localStorage.getItem("p2p") == "false") {
-            changeButton(2);
+            changeButton(i);
         } else {
-            p2pgame(2);
+            p2pgame(i);
         }
-    });
+    }
 
-    action3.click(function() {
-        if (localStorage.getItem("p2p") == "false") {
-            changeButton(3);
-        } else {
-            p2pgame(3);
-        }
-    });
 
         $.ajax({
             url: '/match/all-point',
@@ -135,39 +124,18 @@ var stompClient;
         }
 
         if (data.firstTeamBall) {
-        $(".ball-go img").addClass('green-ball').removeClass('red-ball');
-        $("#playerName").text(data.firstPlayer.name);
-            if (data.position == 2) {
-                action1.text('Атаковать');
-                action2.text('Укрепиться в центре');
-                action3.text('Пас назад');
-            } else if (data.position == 1) {
-                action1.text('Выбить в центр');
-                action2.text('Пас');
-                action3.text('Пас');
-            } else if (data.position == 3) {
-                action1.text('Удар по воротам');
-                action2.text('Подойти поближе');
-                action3.text('Пас назад');
-            }
+            $(".ball-go>img").addClass('green-ball').removeClass('red-ball');
+            $("#player-arrows-1").show();
+            $("#player-arrows-2").hide();
+//        .css()
+            $("#playerName").text(data.firstPlayer.name);
         } else {
-        $(".ball-go img").addClass('red-ball').removeClass('green-ball');
-        $("#playerName").text(data.secondPlayer.name);
-            if (data.position == 2) {
-                action1.text('Не пропускать');
-                action2.text('Пытаться забрать мяч');
-                action3.text('Блокировать передачи');
-            } else if (data.position == 1) {
-                action1.text('Усиление вратаря');
-                action2.text('Отбор');
-                action3.text('Блок передач');
-            } else if (data.position == 3) {
-                action1.text('Не давать вынос');
-                action2.text('Отбор');
-                action3.text('Отбор');
-            }
+            $(".ball-go>img").addClass('red-ball').removeClass('green-ball');
+            $("#player-arrows-2").show();
+            $("#player-arrows-1").hide();
+            $("#playerName").text(data.secondPlayer.name);
         }
-    writeStatistic(data.statisticDto, data.matchDto.firstTeam.team.name, data.matchDto.secondTeam.team.name);
+        writeStatistic(data.statisticDto, data.matchDto.firstTeam.team.name, data.matchDto.secondTeam.team.name);
 
         $(".ball-go").animate({left: data.ballPosition.x, top: data.ballPosition.y});
     }
