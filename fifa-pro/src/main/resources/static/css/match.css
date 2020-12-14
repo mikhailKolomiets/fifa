@@ -10,7 +10,7 @@ body {
     left: 500px;
     top: 270px;
 }
-.ball-go img {
+.ball-go > img {
     border-radius: 50%;
 }
 .red-ball {
@@ -18,6 +18,26 @@ body {
 }
 .green-ball {
     border: 5px solid green;
+}
+.ball-go .action-arrow-forward {
+    position: absolute;
+    top: 15px;
+    left: 115%;
+}
+.ball-go .action-arrow-up {
+    position: absolute;
+    bottom: 112%;
+    left: 15px;
+}
+.ball-go .action-arrow-down {
+    position: absolute;
+    top: 107%;
+    left: 15px;
+}
+.ball-go .action-arrow-back {
+    position: absolute;
+    top: 15px;
+    right: 115%;
 }
 .player {
     position: absolute;
@@ -28,10 +48,10 @@ body {
     border-radius: 50%;
 }
 .player-1 {
-    border-color: green;
+    border-color: #47b347;
 }
 .player-2 {
-    border-color: red;
+    border-color: #e06a6a;
 }
 .stati {
     position:absolute;

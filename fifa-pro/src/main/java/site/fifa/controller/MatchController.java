@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 import site.fifa.dto.MatchDto;
 import site.fifa.dto.MatchStepDto;
 import site.fifa.dto.StatisticDto;
-import site.fifa.entity.match.MatchPlay;
 import site.fifa.service.MatchService;
 
 import java.awt.*;
@@ -50,9 +49,16 @@ public class MatchController {
         return matchService.getLastMatches();
     }
 
+    @ApiResponses({@ApiResponse(code = 200, message = "Return all players point")})
     @GetMapping("all-point")
     public List<Point> getAllPointsForPlayers() {
         return matchService.returnAllPosition();
+    }
+
+    @ApiResponses({@ApiResponse(code = 200, message = "Return yesterday, today and tomorrow's league games")})
+    @GetMapping("league-games/{leagueId}")
+    public List<StatisticDto> getLeagueGames(@PathVariable Long leagueId) {
+        return matchService.getLeagueStatisticOfMatches(leagueId);
     }
 
 }

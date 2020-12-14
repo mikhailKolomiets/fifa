@@ -76,7 +76,7 @@ public class TeamService {
         Team team = teamRepository.findById(teamId).orElse(null);
         Player player = playerRepository.findById(playerId).orElse(null);
         if (player != null && team != null) {
-            player.setReserve(true);
+            player.setReserve(true); // todo delete after all refactoring
             int price = player.getPrice();
             team.setMoney(team.getMoney() - price);
 
