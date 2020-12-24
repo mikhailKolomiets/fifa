@@ -59,7 +59,7 @@ public class MatchService {
         try {
             userTeam = userRepository.findByUserLastIp(servletRequest.getRemoteAddr()).getTeamId();
         } catch (IllegalStateException e) {
-            System.out.println("exc in been");
+            userTeam = match.getFirstTeamId();
         }
         if (match == null || !match.getFirstTeamId().equals(userTeam)) {
             match = matchRepository.save(new MatchPlay(MatchStatus.STARTED, MatchType.FRIENDLY, LocalDate.now(), firstTeamId, secondTeamId));
