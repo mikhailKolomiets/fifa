@@ -16,6 +16,7 @@ import site.fifa.entity.match.MatchType;
 import site.fifa.repository.*;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.ServletRequest;
 import java.awt.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -41,6 +42,10 @@ public class MatchService {
     private PlayerRepository playerRepository;
     @Autowired
     private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private ServletRequest servletRequest;
+    @Autowired
+    private UserRepository userRepository;
 
     private static ArrayList<MatchStepDto> matchStepDtos = new ArrayList<>();
     private static ArrayList<StatisticDto> lastMatches = new ArrayList<>();
@@ -50,7 +55,13 @@ public class MatchService {
 
         MatchPlay match = matchRepository.getByFirstTeamIdAndSecondTeamIdAndStatus(firstTeamId, secondTeamId, MatchStatus.CREATED)
                 .stream().findAny().orElse(null);
-        if (match == null) {
+        Long userTeam = null;
+        try {
+            userTeam = userRepository.findByUserLastIp(servletRequest.getRemoteAddr()).getTeamId();
+        } catch (IllegalStateException e) {
+            userTeam = match.getFirstTeamId();
+        }
+        if (match == null || !match.getFirstTeamId().equals(userTeam)) {
             match = matchRepository.save(new MatchPlay(MatchStatus.STARTED, MatchType.FRIENDLY, LocalDate.now(), firstTeamId, secondTeamId));
         } else if (isPC || getMatchStepDtoById(match.getId()) != null) {
             matchRepository.updateMatchStatusById(MatchStatus.STARTED, match.getId());
@@ -383,6 +394,8 @@ public class MatchService {
         // clear all matches in server
         matchStepDtos.clear();
         matchRepository.resetAllMatches();
+        matchRepository.deleteAllFriendlyMatches();
+
         for (MatchPlay matchPlay : matchPlayList) {
             matchDto = startMatchWithPC(matchPlay.getFirstTeamId(), matchPlay.getSecondTeamId(), true);
             matchStepDto = makeStepWithCPU(matchDto.getMatchId(), -1);

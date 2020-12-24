@@ -7,4 +7,6 @@ public interface UserRepository extends CrudRepository<User, Long> {
 
     User findByName(String name);
 
+    User findByUserLastIp(String userLastIp);
+
 }

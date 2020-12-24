@@ -3,6 +3,7 @@ package site.fifa.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import site.fifa.constants.GameConstants;
 import site.fifa.dto.UserDTO;
 import site.fifa.entity.User;
 import site.fifa.repository.UserRepository;
@@ -27,8 +28,7 @@ public class UserService {
 
     public UserDTO createUser(User user) {
 
-        System.out.println(servletRequest.getRemoteAddr());
-        System.out.println(servletRequest.getLocalAddr());
+        String userIp = servletRequest.getRemoteAddr();
 
         User savesUser = userRepository.findByName(user.getName());
 
@@ -36,8 +36,13 @@ public class UserService {
         if (savesUser != null) {
             return UserDTO.builder().user(user).message("User with name " + user.getName() + " is present").build();
         }
+        savesUser = userRepository.findByUserLastIp(userIp);
+        if (savesUser != null && savesUser.getLastEnter().isAfter(LocalDateTime.now().minusDays(GameConstants.USER_IP_CHECK_DAYS))) {
+            return UserDTO.builder().user(user).message("Cant create user. Ip is use another user's.").build();
+        }
 
         user.setLastEnter(LocalDateTime.now());
+        user.setUserLastIp(servletRequest.getRemoteAddr());
         savesUser = userRepository.save(user);
         String key = UUID.randomUUID().toString();
 
@@ -50,8 +55,13 @@ public class UserService {
     public UserDTO login(User user) {
 
         UserDTO sessionUser = findUserInSession(user.getName());
-        if (sessionUser != null)
-            return sessionUser;
+        if (sessionUser != null) {
+            if (sessionUser.getUser().getUserLastIp().equals(servletRequest.getRemoteAddr())) {
+                return sessionUser;
+            } else {
+                return UserDTO.builder().message("ip is not correct").build();
+            }
+        }
 
         User logUser = userRepository.findByName(user.getName());
         if (logUser == null) {
@@ -60,6 +70,7 @@ public class UserService {
             return UserDTO.builder().user(user).message("Password incorrect").build();
         }
         logUser.setLastEnter(LocalDateTime.now());
+        logUser.setUserLastIp(servletRequest.getRemoteAddr());
 
         sessionUser = UserDTO.builder().user(logUser).sessionKey(UUID.randomUUID().toString()).build();
         userOnline.add(sessionUser);
@@ -70,7 +81,7 @@ public class UserService {
 
     public UserDTO findUserInSessionByKey(String key) {
         for (UserDTO u : userOnline) {
-            if(u.getSessionKey().equals(key)) {
+            if(u.getSessionKey().equals(key) && servletRequest.getRemoteAddr().equals(u.getUser().getUserLastIp())) {
                 u.getUser().setLastEnter(LocalDateTime.now());
                 return u;
             }
@@ -96,16 +107,15 @@ public class UserService {
 
     @Scheduled(cron = "10 * * * * *")
     public void deleteByTimeOut() {
-        // todo add to constants
-        System.out.println("check session expired users. users online: " + userOnline.size());
+        System.out.println("check session expired users. Online: " + userOnline.size());
         for (UserDTO u : userOnline) {
-            if (u.getUser().getLastEnter().isBefore(LocalDateTime.now().minusMinutes(4))) {
+            if (u.getUser().getLastEnter().isBefore(LocalDateTime.now().minusSeconds(GameConstants.USER_LOGOUT_TIMEOUT))) {
                 u.getUser().setLastEnter(LocalDateTime.now());
                 userRepository.save(u.getUser());
-                u.getUser().setLastEnter(LocalDateTime.now().minusMinutes(4+1));
+                u.getUser().setLastEnter(LocalDateTime.now().minusSeconds(GameConstants.USER_LOGOUT_TIMEOUT));
             }
         }
-        userOnline = userOnline.stream().filter(u -> u.getUser().getLastEnter().isAfter(LocalDateTime.now().minusMinutes(4))).collect(Collectors.toList());
+        userOnline = userOnline.stream().filter(u -> u.getUser().getLastEnter().isAfter(LocalDateTime.now().minusSeconds(GameConstants.USER_LOGOUT_TIMEOUT))).collect(Collectors.toList());
 
     }
 
