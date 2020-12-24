@@ -6,7 +6,10 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/md5.js"></script>
     <script src="js/main-page.js"></script>
+    <script src="js/login.js"></script>
 </head>
 <style>
 body {
@@ -22,6 +25,23 @@ body {
 <body>
 <div id = "last-matches">js d't work</div>
 <br>
+<div id="login-message"></div>
+<div id="login">
+    <div id="login-show">войти</div>
+    <div id="login-form">
+        <input id="user-name" type="text" placeholder="Имя пользователя">
+        <input id="password" type="password" placeholder="Пароль">
+        <input id="enter" type="button" value="Войти">
+        <div id="registration-link">регистрация</div>
+    </div>
+    <div id="registration-form">
+        <input id="r-user-name" type="text" placeholder="Имя"> <br>
+        <input id="r-password" type="password" placeholder="Пароль"><br>
+        <input id="r-password2" type="password" placeholder="Повтор пароля"><br>
+        <input id="confirm-r" type="button" value="Зарегистрировать">
+    </div>
+    <br>
+</div>
 
 <h2 id="message">Привет в игре ФИФА!</h2>
 <div id="play"><img src="img/quick-match.png"></div>
@@ -33,7 +53,7 @@ body {
         <option value="0">Выбрать команду</option>
     </select>
     <button id="play-match">Играть</button>
-    <br><input id="is2p" type="checkbox">Создать на двоих
+    <!-- <br><input id="is2p" type="checkbox">Создать на двоих -->
     <div id="league-games"></div>
 
 </div>

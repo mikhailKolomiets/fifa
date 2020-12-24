@@ -41,4 +41,9 @@ public interface MatchRepository extends CrudRepository<MatchPlay, Long> {
     @Query(nativeQuery = true, value = "select * from match_play mp where mp.type = 1 and mp.status = 2 order by mp.started desc limit :amount")
     List<MatchPlay> getLastLeagueMatches(@Param("amount") Long amount);
 
+    @Transactional
+    @Modifying
+    @Query("delete from MatchPlay mp where mp.status = 0 and mp.type = 0")
+    void deleteAllFriendlyMatches();
+
 }

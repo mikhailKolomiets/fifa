@@ -1,5 +1,6 @@
 package site.fifa.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import javax.persistence.Entity;
@@ -19,6 +20,8 @@ public class User {
     private String name;
     private String email;
     private Long teamId;
+    @JsonIgnore
     private String password;
     private LocalDateTime lastEnter;
+    private String userLastIp;
 }
