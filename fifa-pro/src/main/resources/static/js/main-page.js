@@ -61,9 +61,9 @@ localStorage.setItem("p2p", "false");
         opt.text('(' + ft.team.country.countryName + ') ' + ft.team.name + ' (' + ft.leaguePosition + ") - " + st.team.name + ' (' + st.leaguePosition + ")")
             .css('color' , game.playSide == 'FiRST_TEAM' ? "red" : "")
             .click(function() {
-                 if ($("#is2p")[0].checked) {
-                    localStorage.setItem("p2p", "first");
-                 }
+                // if ($("#is2p")[0].checked) {
+                //    localStorage.setItem("p2p", "first");
+                // }
 
                  localStorage.setItem("team1", game.firstTeam.team.id);
                  localStorage.setItem("team2", game.secondTeam.team.id);
