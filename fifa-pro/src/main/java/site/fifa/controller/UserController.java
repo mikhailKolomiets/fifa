@@ -27,10 +27,11 @@ public class UserController {
 
     @ApiResponses({@ApiResponse(code = 200, message = "User login or tell in message why not")})
     @PostMapping("login")
-    public UserDTO login(@RequestParam String username, @RequestParam String password) {
+    public UserDTO login(@RequestParam String username, @RequestParam String password, @RequestParam String sessionKey) {
         User user = new User();
         user.setName(username);
         user.setPassword(password);
+        user.setSessionKey(sessionKey);
         return  userService.login(user);
     }
 

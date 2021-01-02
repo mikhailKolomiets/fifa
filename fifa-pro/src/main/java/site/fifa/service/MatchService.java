@@ -57,7 +57,7 @@ public class MatchService {
                 .stream().findAny().orElse(null);
         Long userTeam = null;
         try {
-            userTeam = userRepository.findByUserLastIp(servletRequest.getRemoteAddr()).getTeamId();
+            userTeam = userRepository.findFirstByUserLastIp(servletRequest.getRemoteAddr()).getTeamId();
         } catch (IllegalStateException e) {
             userTeam = match.getFirstTeamId();
         }
