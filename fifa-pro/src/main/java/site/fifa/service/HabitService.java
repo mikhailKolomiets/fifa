@@ -92,11 +92,11 @@ public class HabitService {
     }
 
     private double getPercent(LocalDateTime habitTime, int allHabits) {
-        int daysToFinal = 100 / allHabits;
+        double maxPercent = 100.0 / allHabits;
         long seconds = ChronoUnit.SECONDS.between(LocalDateTime.now(), habitTime);
-        long finSeconds = ChronoUnit.SECONDS.between(habitTime.plusDays(daysToFinal), habitTime);
+        long finSeconds = ChronoUnit.SECONDS.between(habitTime.plusDays(100), habitTime);
 
-        return (double) seconds / finSeconds * 100;
+        return Math.min((double) seconds / finSeconds * 100, maxPercent);
     }
 
 

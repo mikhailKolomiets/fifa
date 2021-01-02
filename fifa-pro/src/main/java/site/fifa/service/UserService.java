@@ -36,7 +36,7 @@ public class UserService {
         if (savesUser != null) {
             return UserDTO.builder().user(user).message("User with name " + user.getName() + " is present").build();
         }
-        savesUser = userRepository.findByUserLastIp(userIp);
+        savesUser = userRepository.findFirstByUserLastIp(userIp);
         if (savesUser != null && savesUser.getLastEnter().isAfter(LocalDateTime.now().minusDays(GameConstants.USER_IP_CHECK_DAYS))) {
             return UserDTO.builder().user(user).message("Cant create user. Ip is use another user's.").build();
         }
@@ -55,12 +55,8 @@ public class UserService {
     public UserDTO login(User user) {
 
         UserDTO sessionUser = findUserInSession(user.getName());
-        if (sessionUser != null) {
-            if (sessionUser.getUser().getUserLastIp().equals(servletRequest.getRemoteAddr())) {
+        if (sessionUser != null && sessionUser.getUser().getUserLastIp().equals(servletRequest.getRemoteAddr())) {
                 return sessionUser;
-            } else {
-                return UserDTO.builder().message("ip is not correct").build();
-            }
         }
 
         User logUser = userRepository.findByName(user.getName());
@@ -69,14 +65,11 @@ public class UserService {
         } else if (!user.getPassword().equals(logUser.getPassword())) {
             return UserDTO.builder().user(user).message("Password incorrect").build();
         }
-        logUser.setLastEnter(LocalDateTime.now());
+
         logUser.setUserLastIp(servletRequest.getRemoteAddr());
-
-        sessionUser = UserDTO.builder().user(logUser).sessionKey(UUID.randomUUID().toString()).build();
-        userOnline.add(sessionUser);
-
+        logUser.setSessionKey(UUID.randomUUID().toString());
         System.out.println(user.getName() + " is login in");
-        return sessionUser;
+        return putUserInSession(logUser);
     }
 
     public UserDTO findUserInSessionByKey(String key) {
@@ -85,6 +78,11 @@ public class UserService {
                 u.getUser().setLastEnter(LocalDateTime.now());
                 return u;
             }
+        }
+        User user = userRepository.findFirstByUserLastIp(servletRequest.getRemoteAddr());
+        if (user != null && key.equals(user.getSessionKey())) {
+            System.out.println("got " + user.getName() + " from old session");
+            return putUserInSession(user);
         }
         return null;
     }
@@ -111,12 +109,24 @@ public class UserService {
         for (UserDTO u : userOnline) {
             if (u.getUser().getLastEnter().isBefore(LocalDateTime.now().minusSeconds(GameConstants.USER_LOGOUT_TIMEOUT))) {
                 u.getUser().setLastEnter(LocalDateTime.now());
+                System.out.println("try save with key " + u.getUser().getSessionKey());
                 userRepository.save(u.getUser());
                 u.getUser().setLastEnter(LocalDateTime.now().minusSeconds(GameConstants.USER_LOGOUT_TIMEOUT));
             }
         }
         userOnline = userOnline.stream().filter(u -> u.getUser().getLastEnter().isAfter(LocalDateTime.now().minusSeconds(GameConstants.USER_LOGOUT_TIMEOUT))).collect(Collectors.toList());
 
+    }
+
+    private UserDTO putUserInSession(User user) {
+        userOnline = userOnline.stream().filter(u -> !u.getUser().getName().equals(user.getName())).collect(Collectors.toList());
+
+        user.setLastEnter(LocalDateTime.now());
+
+        UserDTO result = UserDTO.builder().user(user).sessionKey(user.getSessionKey()).build();
+
+        userOnline.add(result);
+        return result;
     }
 
 }
