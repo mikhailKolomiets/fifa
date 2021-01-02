@@ -34,7 +34,7 @@ $(document).ready(function() {
             $.ajax({
                     url : "user/login",
                     type : "POST",
-                    data: {"username" : userName, "password" : pass},
+                    data: {"username" : userName, "password" : pass, "sessionKey" : localStorage.getItem("sessionKey")},
                     success : function(data) {
                         if (data.message != null) {
                             loginMessage.text(data.message).show();

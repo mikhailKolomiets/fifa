@@ -24,4 +24,5 @@ public class User {
     private String password;
     private LocalDateTime lastEnter;
     private String userLastIp;
+    private String sessionKey;
 }
