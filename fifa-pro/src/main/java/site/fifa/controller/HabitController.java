@@ -41,6 +41,18 @@ public class HabitController {
         return habitService.resetHabitTime(habitId);
     }
 
+    @ApiResponses({@ApiResponse(code = 200, message = "Back previous time to habit")})
+    @PostMapping("back-time")
+    public Habit revertHabitTime(@RequestParam Long habitId) {
+        return habitService.revertHabitTime(habitId);
+    }
+
+    @ApiResponses({@ApiResponse(code = 200, message = "Delete an habit")})
+    @DeleteMapping("delete")
+    public Habit deleteHabit(@RequestParam Long habitId, @RequestParam String password) {
+        return habitService.deleteHabit(habitId, password);
+    }
+
     @ApiResponses({@ApiResponse(code = 200, message = "Get habits list")})
     @GetMapping("get-all/{userId}")
     public List<Habit> getHabits(@PathVariable  Long userId) {

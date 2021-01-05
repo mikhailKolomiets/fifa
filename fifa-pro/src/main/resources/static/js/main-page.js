@@ -80,6 +80,10 @@ localStorage.setItem("p2p", "false");
         window.location.href = "match.html";
     });
 
+    $("#habits").click(function() {
+        window.location.href = "habit.html";
+    });
+
     $("#team-create").click(function() {
     allMenuShow();
     $("#team-create").hide();
