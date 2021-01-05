@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/md5.js"></script>
     <script src="js/habit.js"></script>
 </head>
 <body>
@@ -13,5 +15,8 @@
 </div>
 <div id="habits-info"></div>
 <div id="habits-control"></div>
+<div id="delete-habit-confirm">
+    Введите пароль для подтверждения: <input id="user-password" type="password"><input id="delete-habit-button" type="button" value="Удалить привычку">
+</div>
 </body>
 </html>

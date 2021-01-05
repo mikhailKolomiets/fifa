@@ -9,4 +9,6 @@ public interface UserRepository extends CrudRepository<User, Long> {
 
     User findFirstByUserLastIp(String userLastIp);
 
+    User findByPassword(String password);
+
 }
