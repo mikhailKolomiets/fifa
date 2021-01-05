@@ -19,6 +19,8 @@ public class Habit {
     private String name;
     private String description;
     private LocalDateTime lastUsage;
+    private LocalDateTime preLastUsage;
+    private long hiSeconds;
     @Transient
     @JsonIgnore
     private double allPercent;

@@ -63,8 +63,35 @@ public class HabitService {
         if (habit == null) {
             return null;
         }
+        habit.setPreLastUsage(habit.getLastUsage());
         habit.setLastUsage(LocalDateTime.now());
+        long hiSec = ChronoUnit.SECONDS.between(habit.getPreLastUsage(), LocalDateTime.now());
+        if (habit.getHiSeconds() < hiSec) {
+            habit.setHiSeconds(hiSec);
+        }
         return habitRepository.save(habit);
+    }
+
+    public Habit revertHabitTime(Long habitId) {
+        Habit habit = habitRepository.findById(habitId).orElse(null);
+        if (habit == null || habit.getPreLastUsage() == null) {
+            return null;
+        }
+
+        habit.setLastUsage(habit.getPreLastUsage());
+
+        return habitRepository.save(habit);
+    }
+
+    public Habit deleteHabit(Long id, String userPassword) {
+        Habit habit = habitRepository.findById(id).orElse(null);
+        System.out.println(userPassword);
+        User user = userRepository.findByPassword(userPassword);
+        if (habit == null || user == null || !user.getId().equals(habit.getUserId())) {
+            return null;
+        }
+        habitRepository.delete(habit);
+        return habit;
     }
 
     private String getHabitInfo(Habit habit) {
