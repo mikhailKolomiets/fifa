@@ -13,7 +13,7 @@ import java.util.List;
 
 public interface MatchRepository extends CrudRepository<MatchPlay, Long> {
 
-    List<MatchPlay> getByFirstTeamIdAndSecondTeamIdAndStatus(Long firstTeamId, Long secondTeamId, MatchStatus status);
+    MatchPlay getLastByFirstTeamIdAndSecondTeamIdAndStatus(Long firstTeamId, Long secondTeamId, MatchStatus status);
 
     @Transactional
     @Modifying

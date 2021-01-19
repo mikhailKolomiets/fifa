@@ -33,4 +33,7 @@ public interface TeamRepository extends CrudRepository<Team, Long> {
     @Query(nativeQuery = true, value = "select * from team t where t.country_id = :countryId")
     List<Team> getByCountryId(@Param("countryId") Long countryId);
 
+    @Query(nativeQuery = true, value = "select t.* from team t left join user u on u.team_id = t.id where t.country_id = :countryId and u.id is null")
+    List<Team> getFreeByCountryId(@Param("countryId") Long countryId);
+
 }

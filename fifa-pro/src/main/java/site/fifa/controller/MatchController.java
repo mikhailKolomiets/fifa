@@ -6,8 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import site.fifa.dto.MatchDto;
 import site.fifa.dto.MatchStepDto;
+import site.fifa.dto.PlaySide;
 import site.fifa.dto.StatisticDto;
 import site.fifa.service.MatchService;
+import site.fifa.service.TeamService;
 
 import java.awt.*;
 import java.util.List;
@@ -18,17 +20,23 @@ public class MatchController {
 
     @Autowired
     private MatchService matchService;
+    @Autowired
+    private TeamService teamService;
 
-    @ApiResponses({@ApiResponse(code = 200, message = "Started game between ywo teams")})
-    @PostMapping("start/{firstTeamId}/{secondTeamId}/{isPC}")
-    public MatchDto startMatch(@PathVariable Long firstTeamId,@PathVariable Long secondTeamId, @PathVariable Long isPC) {
-        return matchService.startMatchWithPC(firstTeamId, secondTeamId, isPC.intValue() == 1);
+    @ApiResponses({@ApiResponse(code = 200, message = "Started game between two teams")})
+    @PostMapping("start/{firstTeamId}/{secondTeamId}/{matchType}")
+    public MatchDto startMatch(@PathVariable Long firstTeamId, @PathVariable Long secondTeamId, @PathVariable Long matchType) {
+        if (matchType == 1 || (teamService.getTeamByIdAndUserIp(firstTeamId) == null && teamService.getTeamByIdAndUserIp(secondTeamId) == null)) {
+            return matchService.startQuickGame(firstTeamId, secondTeamId);
+        }
+        return matchService.startGame(firstTeamId, secondTeamId);
     }
 
     @ApiResponses({@ApiResponse(code = 200, message = "calculate match step by action")})
     @PostMapping("step/{matchId}/{action}")
-    public MatchStepDto play(@PathVariable Long matchId, @PathVariable String action) {
-        return matchService.makeStepWithCPU(matchId, Integer.parseInt(action));
+    public MatchStepDto play(@PathVariable Long matchId, @RequestParam Long teamSide, @PathVariable String action) {
+        PlaySide playSide = teamSide == 2 ? PlaySide.SECOND_TEAM : PlaySide.FiRST_TEAM;
+        return matchService.makeGameStep(matchId, playSide, Integer.parseInt(action));
     }
 
     @ApiResponses({@ApiResponse(code = 200, message = "Return next three games in all leagues")})

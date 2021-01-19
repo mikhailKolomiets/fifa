@@ -4,15 +4,21 @@ mpr = $("#main-page-ref");
 ballPosition = 500;
 var matchType = localStorage.getItem("p2p") == "first" ? 0 : 1;
 var stompClient;
+var playSide = 1;
 
     $.ajax({
-        url: '/match/start/' + localStorage.getItem("team1") + "/" + localStorage.getItem("team2") + '/' + matchType,
+        url: '/match/start/' + localStorage.getItem("team1") + "/" + localStorage.getItem("team2") + "/" + localStorage.getItem("matchType"),
         type: "POST",
         success: function (data) {
             $("#title-change").text(data.firstTeam.team.name + " 0:0 " + data.secondTeam.team.name);
             localStorage.setItem("matchId", data.matchId);
             statusMatch.text("Матч начался");
             $("#player-arrows-2").hide();
+            if (localStorage.getItem("matchType") == 2 && localStorage.getItem("team2") == localStorage.getItem("teamadm")) {
+                playSide = 2;
+                $("#player-arrows-1").hide();
+                $("#player-arrows-2").show();
+            }
             mpr.hide();
             if (localStorage.getItem("p2p") == "first" || localStorage.getItem("p2p") == "second") {
                                 socket = new SockJS('/fifa-stomp');
@@ -29,7 +35,7 @@ var stompClient;
                                                     }
                                             });
                                         });
-                            }
+            }
         }
     });
 
@@ -44,6 +50,9 @@ var stompClient;
 
     function makeAction(i) {
         if (localStorage.getItem("p2p") == "false") {
+            if (playSide == 2 && i != 2) {
+                i = i == 1 ? 3 : 1;
+            }
             changeButton(i);
         } else {
             p2pgame(i);
@@ -81,6 +90,7 @@ var stompClient;
         $.ajax({
             url: '/match/step/' + localStorage.getItem("matchId") + "/" + action,
             type: "POST",
+            data : {teamSide : playSide},
             success: function (data) {
             $("#match-status").html(getLog(data));
             $("#title-change").text(data.matchDto.firstTeam.team.name + " " + data.goalFirstTeam + ":" + data.goalSecondTeam +
@@ -123,7 +133,7 @@ var stompClient;
             data.position = data.position == 3 ? 1 : data.position == 1 ? 3 : 2;
         }
 
-        if (data.firstTeamBall) {
+        if ((data.firstTeamBall && playSide == 1) || (!data.firstTeamBall && playSide == 2)) {
             $(".ball-go>img").addClass('green-ball').removeClass('red-ball');
             $("#player-arrows-1").show();
             $("#player-arrows-2").hide();
