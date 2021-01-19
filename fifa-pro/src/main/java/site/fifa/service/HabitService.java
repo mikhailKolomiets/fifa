@@ -42,18 +42,36 @@ public class HabitService {
         StringBuilder result = new StringBuilder(user.getName() + "'s habits: ");
         double allPercent = 0;
         double percent;
+        double maxForHabit = userHabits.size() != 0 ? 100d / userHabits.size() : 0;
+        boolean isMax;
+        int maxHabit = 0;
 
         for (Habit h : userHabits) {
-            percent = getPercent(h.getLastUsage(), amountOfHabits);
+            isMax = false;
+            percent = getPercent(h.getLastUsage());
+            if (percent > maxForHabit) {
+                percent = maxForHabit;
+                isMax = true;
+                maxHabit += 1;
+            }
             allPercent += percent;
             result.append(h.getName())
                     .append(" (")
                     .append(getHabitInfo(h))
                     .append(" its ")
                     .append(new DecimalFormat("#0.000").format(percent))
-                    .append("%) ");
+                    .append("%");
+            if (isMax) {
+                result.append(" is max");
+            }
+            result.append(") ");
+
         }
-        result.append(". Summary: ").append(new DecimalFormat("#0.000").format(allPercent)).append("%.");
+        if(maxHabit != userHabits.size()) {
+            result.append(". Summary: ").append(new DecimalFormat("#0.000").format(allPercent)).append("%.");
+        } else {
+            result.append(" All habits is done. Congratulations!!!");
+        }
 
         return result.toString();
     }
@@ -118,12 +136,11 @@ public class HabitService {
         return result;
     }
 
-    private double getPercent(LocalDateTime habitTime, int allHabits) {
-        double maxPercent = 100.0 / allHabits;
+    private double getPercent(LocalDateTime habitTime) {
         long seconds = ChronoUnit.SECONDS.between(LocalDateTime.now(), habitTime);
         long finSeconds = ChronoUnit.SECONDS.between(habitTime.plusDays(100), habitTime);
 
-        return Math.min((double) seconds / finSeconds * 100, maxPercent);
+        return (double) seconds / finSeconds * 100;
     }
 
 

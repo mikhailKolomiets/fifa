@@ -16,8 +16,10 @@ var typeValues = ["GK", "CD", "MD", "ST"];
         success : function(teamData) {
             teamDataMain = teamData;
             if (teamData.length == 0) {
-                stuff.text("no team");
+                localStorage.setItem("teamadm",0);
+                window.location.href = "index.html";
             } else {
+                localStorage.setItem("teamadm",teamData.team.id);
                 var money = teamData.team.money;
                 $("#title").text(teamData.team.name);
                 var staff = teamData.players;

@@ -7,11 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import site.fifa.FIFApp;
-import site.fifa.dto.MatchDto;
-import site.fifa.dto.MatchStepDto;
-import site.fifa.dto.NewTeamCreateRequest;
-import site.fifa.dto.TeamDTO;
-import site.fifa.entity.Team;
+import site.fifa.dto.*;
 import site.fifa.entity.match.MatchPlay;
 import site.fifa.entity.match.MatchStatus;
 import site.fifa.repository.GoalsInMatchRepository;
@@ -63,22 +59,22 @@ public class MatchServiceTest {
         TeamDTO secondTeam = teamService.createNewTeam(team);
 
         // play match with PC
-        MatchDto testedMatch = matchService.startMatchWithPC(firstTeam.getTeam().getId(), secondTeam.getTeam().getId(), true);
+        MatchDto testedMatch = matchService.startGame(firstTeam.getTeam().getId(), secondTeam.getTeam().getId());
         assertNotNull(testedMatch);
-        MatchStepDto matchStepDto = matchService.makeStepWithCPU(testedMatch.getMatchId(), 1);
+        MatchStepDto matchStepDto = matchService.makeGameStep(testedMatch.getMatchId(), PlaySide.CPU, 1);
         while (!matchStepDto.getLastStepLog().equals(matchStepDto.showGoals())) {
-            matchStepDto = matchService.makeStepWithCPU(testedMatch.getMatchId(), 1);
+            matchStepDto = matchService.makeGameStep(testedMatch.getMatchId(),PlaySide.CPU, 1);
         }
         assertEquals(MatchStatus.FINISHED, matchRepository.findById(testedMatch.getMatchId()).get().getStatus());
 
         // play match with 2 players
-        testedMatch = matchService.startMatchWithPC(firstTeam.getTeam().getId(), secondTeam.getTeam().getId(), false);
+        testedMatch = matchService.startGame(firstTeam.getTeam().getId(), secondTeam.getTeam().getId());
         assertNotNull(testedMatch);
-        matchStepDto = matchService.makeStepWithCPU(testedMatch.getMatchId(), 1);
-        matchService.makeStepWithCPU(testedMatch.getMatchId(), 10);
+        matchStepDto = matchService.makeGameStep(testedMatch.getMatchId(), PlaySide.CPU, 1);
+        matchService.makeGameStep(testedMatch.getMatchId(), PlaySide.CPU, 10);
         while (!matchStepDto.getLastStepLog().equals(matchStepDto.showGoals())) {
-            matchService.makeStepWithCPU(testedMatch.getMatchId(), 10);
-            matchStepDto = matchService.makeStepWithCPU(testedMatch.getMatchId(), 1);
+            matchService.makeGameStep(testedMatch.getMatchId(), PlaySide.CPU, 10);
+            matchStepDto = matchService.makeGameStep(testedMatch.getMatchId(), PlaySide.CPU, 1);
         }
         assertEquals(MatchStatus.FINISHED, matchRepository.findById(testedMatch.getMatchId()).get().getStatus());
 

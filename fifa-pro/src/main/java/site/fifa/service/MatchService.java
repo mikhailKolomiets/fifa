@@ -50,20 +50,19 @@ public class MatchService {
     private static ArrayList<MatchStepDto> matchStepDtos = new ArrayList<>();
     private static ArrayList<StatisticDto> lastMatches = new ArrayList<>();
 
-    @Transactional
-    public MatchDto startMatchWithPC(Long firstTeamId, Long secondTeamId, boolean isPC) {
+    public MatchDto startQuickGame(Long firstTeamId, Long secondTeamId) {
+        matchRepository.save(new MatchPlay(MatchStatus.STARTED, MatchType.FRIENDLY, LocalDate.now(), firstTeamId, secondTeamId));
+        return startGame(firstTeamId, secondTeamId);
+    }
 
-        MatchPlay match = matchRepository.getByFirstTeamIdAndSecondTeamIdAndStatus(firstTeamId, secondTeamId, MatchStatus.CREATED)
-                .stream().findAny().orElse(null);
-        Long userTeam = null;
-        try {
-            userTeam = userRepository.findFirstByUserLastIp(servletRequest.getRemoteAddr()).getTeamId();
-        } catch (IllegalStateException e) {
-            userTeam = match.getFirstTeamId();
-        }
-        if (match == null || !match.getFirstTeamId().equals(userTeam)) {
+    @Transactional
+    public MatchDto startGame(Long firstTeamId, Long secondTeamId) {
+
+        MatchPlay match = matchRepository.getLastByFirstTeamIdAndSecondTeamIdAndStatus(firstTeamId, secondTeamId, MatchStatus.CREATED);
+
+        if (match == null) {
             match = matchRepository.save(new MatchPlay(MatchStatus.STARTED, MatchType.FRIENDLY, LocalDate.now(), firstTeamId, secondTeamId));
-        } else if (isPC || getMatchStepDtoById(match.getId()) != null) {
+        } else {
             matchRepository.updateMatchStatusById(MatchStatus.STARTED, match.getId());
         }
 
@@ -73,15 +72,13 @@ public class MatchService {
         matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
         matchStepDto.getStatisticDto().setFirstTeamName(matchStepDto.getMatchDto().getFirstTeam().getTeam().getName());
         matchStepDto.getStatisticDto().setSecondTeamName(matchStepDto.getMatchDto().getSecondTeam().getTeam().getName());
-        if (!isPC) {
-            matchStepDto.getMatchDto().setPlaySide(PlaySide.FiRST_TEAM);
-        }
+
         matchStepDtos.add(matchStepDto);
         return matchStepDto.getMatchDto();
     }
 
     @Transactional
-    public MatchStepDto makeStepWithCPU(Long matchId, int action) {
+    public MatchStepDto makeGameStep(Long matchId, PlaySide playSide, int action) {
 
         MatchStepDto matchStepDto = getMatchStepDtoById(matchId);
         matchStepDto.increaseStep();
@@ -133,23 +130,14 @@ public class MatchService {
         int addition;
 
         // calculate step action algorithm
-        if (action < 1) {
+        if (playSide == PlaySide.CPU) {
             matchStepDto.setSecondTeamAction(randomizeActionByTeamChance(matchStepDto.getSecondTeamChance()));
             action = randomizeActionByTeamChance(matchStepDto.getFirstTeamChance());
-        } else if (matchStepDto.getMatchDto().getPlaySide() != PlaySide.CPU) {
-            if (action > 9) {
-                matchStepDto.setFirstTeamAction(action / 10);
-            } else {
-                matchStepDto.setSecondTeamAction(action);
-            }
-            if (matchStepDto.getFirstTeamAction() == 0 || matchStepDto.getSecondTeamAction() == 0) {
-                matchStepDto.setStep(matchStepDto.getStep() - 1);
-                updateBallCoordinate(matchStepDto, startPointBall);
-                return matchStepDto;
-            }
-            action = matchStepDto.getFirstTeamAction();
-        } else {
+        } else if (playSide == PlaySide.FiRST_TEAM) {
             matchStepDto.setSecondTeamAction(randomizeActionByTeamChance(matchStepDto.getSecondTeamChance()));
+        } else {
+            matchStepDto.setSecondTeamAction(action);
+            action = randomizeActionByTeamChance(matchStepDto.getFirstTeamChance());
         }
 
         if (matchStepDto.getPosition() == 1) {
@@ -397,21 +385,25 @@ public class MatchService {
         matchRepository.deleteAllFriendlyMatches();
 
         for (MatchPlay matchPlay : matchPlayList) {
-            matchDto = startMatchWithPC(matchPlay.getFirstTeamId(), matchPlay.getSecondTeamId(), true);
-            matchStepDto = makeStepWithCPU(matchDto.getMatchId(), -1);
+            matchDto = startGame(matchPlay.getFirstTeamId(), matchPlay.getSecondTeamId());
+            matchStepDto = makeGameStep(matchDto.getMatchId(), PlaySide.CPU, 1);
             while (!matchStepDto.getLastStepLog().equals(matchStepDto.showGoals())) {
-                matchStepDto = makeStepWithCPU(matchDto.getMatchId(), -1);
+                matchStepDto = makeGameStep(matchDto.getMatchId(), PlaySide.CPU, 1);
             }
             System.out.println(matchStepDto.showGoals());
         }
     }
 
     public List<MatchDto> getMatchesForPlayLeaguesGame() {
+        //todo just return all matches for ip user team id for today if his team first
+        User user = userRepository.findFirstByUserLastIp(servletRequest.getRemoteAddr());
         List<MatchDto> result = new ArrayList<>();
-        List<MatchPlay> matchPlays = matchRepository.getByStarted(LocalDate.now());
-        for (MatchPlay m : matchPlays) {
-            if (m.getStatus() == MatchStatus.CREATED)
-            result.add(new MatchDto(m.getId(), PlaySide.CPU, m.getStarted(), teamService.getTeamById(m.getFirstTeamId()), teamService.getTeamById(m.getSecondTeamId())));
+        if (user != null && user.getTeamId() != null) {
+            List<MatchPlay> matchPlays = matchRepository.getByStarted(LocalDate.now());
+            for (MatchPlay m : matchPlays) {
+                if (m.getStatus() == MatchStatus.CREATED && (user.getTeamId().equals(m.getFirstTeamId()) || user.getTeamId().equals(m.getSecondTeamId())))
+                    result.add(new MatchDto(m.getId(), PlaySide.CPU, m.getStarted(), teamService.getTeamById(m.getFirstTeamId()), teamService.getTeamById(m.getSecondTeamId())));
+            }
         }
         result.addAll(0, matchStepDtos.stream().filter(msd -> msd.getMatchDto().getPlaySide() == PlaySide.FiRST_TEAM).map(MatchStepDto::getMatchDto).collect(Collectors.toList()));
         return result;

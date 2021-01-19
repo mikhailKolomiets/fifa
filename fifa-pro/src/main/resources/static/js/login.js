@@ -5,6 +5,7 @@ $(document).ready(function() {
     loginMessage = $("#login-message");
     login = $("#login");
     $("#league-games").hide();
+    var user;
 
     hideAllLoginForms();
 
@@ -16,12 +17,26 @@ $(document).ready(function() {
             success : function(data) {
                     //console.log(" -> ", data.length);
                 if (data.length != 0) {
-                    loginMessage.text("Hi " + data.user.name).show();
+                user = data.user;
+                localStorage.setItem("teamadm", user.teamId == null ? 0 : user.teamId);
+                    loginMessage.text("Hi " + user.name).show();
                     login.hide();
                     $("#league-games").show();
                 }
             }
     });
+
+    loginMessage.click(function() {
+        $.ajax({
+            url : "user/logout",
+            type : "GET",
+            data : {key : localStorage.getItem("sessionKey")},
+            success : function() {
+                localStorage.setItem("sessionKey", "");
+                window.location.reload();
+            }
+        })
+    })
 
     $("#login-show").click(function() {
         hideAllLoginForms();
