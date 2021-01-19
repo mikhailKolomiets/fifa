@@ -14,6 +14,9 @@ var countryCheck = $("#country-check");
 var teamCheck = $("#team-check");
 hideAll();
 localStorage.setItem("p2p", "false");
+localStorage.removeItem("team1");
+localStorage.removeItem("team2");
+localStorage.removeItem("matchType");
 
     $("#play").click(function() {
     allMenuShow();
@@ -67,6 +70,7 @@ localStorage.setItem("p2p", "false");
 
                  localStorage.setItem("team1", game.firstTeam.team.id);
                  localStorage.setItem("team2", game.secondTeam.team.id);
+                 localStorage.setItem("matchType", 2);
                  if (game.playSide == 'FiRST_TEAM') {
                     localStorage.setItem("p2p", "second");
                  }
@@ -77,6 +81,7 @@ localStorage.setItem("p2p", "false");
     $("#play-match").click(function() {
         localStorage.setItem("team1", $('#firstTeamSelect').val());
         localStorage.setItem("team2", $('#secondTeamSelect').val());
+        localStorage.setItem("matchType", 1);
         window.location.href = "match.html";
     });
 
@@ -262,15 +267,17 @@ localStorage.setItem("p2p", "false");
         teamAdmin.hide();
         hideAll();
         countryCheck.show();
+        if (localStorage.getItem("teamadm") == 0) {
         $.ajax({
             url: 'countries',
             type: 'GET',
             success: function (countries) {
-                    countryCheck.empty();
-                    countryCheck.append($('<option>', {
-                        value: 0,
-                        text:  'Выбрать страну...'
-                    }));
+                $("#team-check-message").text("Выберете команду для управления");
+                countryCheck.empty();
+                countryCheck.append($('<option>', {
+                    value: 0,
+                    text:  'Выбрать страну...'
+                }));
                     for (item in countries) {
                         countryCheck.append($('<option>', {
                             value: countries[item].countryId,
@@ -279,13 +286,16 @@ localStorage.setItem("p2p", "false");
                     }
             }
         });
+        } else {
+            window.location.href="team-page.html";
+        }
     });
 
     countryCheck.change(function() {
         teamCheck.show();
         var countryId = $('#country-check option:selected').val();
         $.ajax({
-            url: 'team/get-by-country/' + countryId,
+            url: 'team/get-free-by-country/' + countryId,
             type: 'GET',
             success: function (teams) {
                     teamCheck.empty();
@@ -305,8 +315,15 @@ localStorage.setItem("p2p", "false");
 
     teamCheck.change(function() {
         var teamId = $('#team-check option:selected').val();
-        localStorage.setItem("teamadm", teamId);
-        window.location.href="team-page.html";
+        $.ajax({
+            url : "team/assign",
+            type : "POST",
+            data : {"teamId" : teamId},
+            success : function (data) {
+                    localStorage.setItem("teamadm", teamId);
+                    window.location.href="team-page.html";
+            }
+        })
     });
 
     function allMenuShow() {

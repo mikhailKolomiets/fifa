@@ -6,11 +6,9 @@ import org.springframework.transaction.annotation.Transactional;
 import site.fifa.dto.NewTeamCreateRequest;
 import site.fifa.dto.TeamDTO;
 import site.fifa.entity.*;
-import site.fifa.repository.CountryRepository;
-import site.fifa.repository.LeagueTableItemRepository;
-import site.fifa.repository.PlayerRepository;
-import site.fifa.repository.TeamRepository;
+import site.fifa.repository.*;
 
+import javax.servlet.ServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,12 +17,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TeamService {
 
-
     private final TeamRepository teamRepository;
     private final CountryRepository countryRepository;
     private final PlayerService playerService;
     private final LeagueTableItemRepository leagueTableItemRepository;
     private final PlayerRepository playerRepository;
+    private final ServletRequest servletRequest;
+    private final UserRepository userRepository;
 
     public TeamDTO createNewTeam(NewTeamCreateRequest request) {
 
@@ -49,6 +48,24 @@ public class TeamService {
         return result;
     }
 
+    public User assignTeamForUser(Long teamId) {
+        User user = userRepository.findFirstByUserLastIp(servletRequest.getRemoteAddr());
+        if (user != null) {
+            user.setTeamId(teamId);
+            userRepository.save(user);
+        }
+        return user;
+    }
+
+    public TeamDTO getTeamByIdAndUserIp(Long teamId) {
+        User user = userRepository.findFirstByUserLastIp(servletRequest.getRemoteAddr());
+        if (user == null || user.getTeamId() == null) {
+            return null;
+        }
+        TeamDTO result = getTeamById(teamId);
+        return result.getTeam().getId().equals(user.getTeamId()) ? result : null;
+    }
+
     public TeamDTO getTeamById(Long teamId) {
         Team team = teamRepository.findById(teamId).orElse(null);
         if (team == null) {
@@ -69,6 +86,10 @@ public class TeamService {
 
     public List<Team> getByCountryId(Long countryId) {
         return teamRepository.getByCountryId(countryId);
+    }
+
+    public List<Team> getFreeByCountry(Long countryId) {
+        return teamRepository.getFreeByCountryId(countryId);
     }
 
     @Transactional

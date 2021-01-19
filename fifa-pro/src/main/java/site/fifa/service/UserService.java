@@ -43,8 +43,9 @@ public class UserService {
 
         user.setLastEnter(LocalDateTime.now());
         user.setUserLastIp(servletRequest.getRemoteAddr());
-        savesUser = userRepository.save(user);
         String key = UUID.randomUUID().toString();
+
+        userRepository.save(user);
 
         UserDTO result = UserDTO.builder().user(user).sessionKey(key).build();
         userOnline.add(result);
@@ -68,6 +69,7 @@ public class UserService {
 
         logUser.setUserLastIp(servletRequest.getRemoteAddr());
         logUser.setSessionKey(UUID.randomUUID().toString());
+        userRepository.save(logUser);
         System.out.println(user.getName() + " is login in");
         return putUserInSession(logUser);
     }
@@ -89,9 +91,17 @@ public class UserService {
 
     public void logout(String key) {
         UserDTO userDTO = findUserInSessionByKey(key);
-        if (userDTO != null)
+        if (userDTO != null) {
             userDTO.getUser().setLastEnter(LocalDateTime.now().minusMinutes(4));
-        deleteByTimeOut();
+            User user = userRepository.findFirstByUserLastIp(servletRequest.getRemoteAddr());
+            if (user != null) {
+                user.setLastEnter(LocalDateTime.now());
+                user.setSessionKey(null);
+                System.out.println(user.getName() + " is login out");
+                userRepository.save(user);
+            }
+        }
+        userOnline.remove(userDTO);
     }
 
     public UserDTO findUserInSession(String name) {
