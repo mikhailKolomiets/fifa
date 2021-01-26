@@ -4,11 +4,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import site.fifa.constants.GameConstants;
+import site.fifa.dto.CounterDto;
 import site.fifa.dto.UserDTO;
+import site.fifa.entity.IpCounter;
 import site.fifa.entity.User;
+import site.fifa.repository.IpCounterRepository;
 import site.fifa.repository.UserRepository;
 
 import javax.servlet.ServletRequest;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,8 +27,12 @@ public class UserService {
 
     @Autowired
     private ServletRequest servletRequest;
+    @Autowired
+    private IpCounterRepository ipCounterRepository;
 
     private List<UserDTO> userOnline = new ArrayList<>();
+    private List<IpCounter> usersIps = new ArrayList<>();
+    private CounterDto counterDto;
 
     public UserDTO createUser(User user) {
 
@@ -49,6 +57,7 @@ public class UserService {
 
         UserDTO result = UserDTO.builder().user(user).sessionKey(key).build();
         userOnline.add(result);
+        updateCounter(result);
 
         return result;
     }
@@ -57,7 +66,7 @@ public class UserService {
 
         UserDTO sessionUser = findUserInSession(user.getName());
         if (sessionUser != null && sessionUser.getUser().getUserLastIp().equals(servletRequest.getRemoteAddr())) {
-                return sessionUser;
+            return sessionUser;
         }
 
         User logUser = userRepository.findByName(user.getName());
@@ -76,16 +85,20 @@ public class UserService {
 
     public UserDTO findUserInSessionByKey(String key) {
         for (UserDTO u : userOnline) {
-            if(u.getSessionKey().equals(key) && servletRequest.getRemoteAddr().equals(u.getUser().getUserLastIp())) {
+            if (u.getSessionKey().equals(key) && servletRequest.getRemoteAddr().equals(u.getUser().getUserLastIp())) {
                 u.getUser().setLastEnter(LocalDateTime.now());
+                updateCounter(u);
                 return u;
             }
         }
         User user = userRepository.findFirstByUserLastIp(servletRequest.getRemoteAddr());
         if (user != null && key.equals(user.getSessionKey())) {
             System.out.println("got " + user.getName() + " from old session");
-            return putUserInSession(user);
+            UserDTO result = putUserInSession(user);
+            updateCounter(result);
+            return result;
         }
+        updateCounter(null);
         return null;
     }
 
@@ -99,6 +112,7 @@ public class UserService {
                 user.setSessionKey(null);
                 System.out.println(user.getName() + " is login out");
                 userRepository.save(user);
+                deleteIpCounterFromSessionByIp(user.getUserLastIp());
             }
         }
         userOnline.remove(userDTO);
@@ -106,7 +120,7 @@ public class UserService {
 
     public UserDTO findUserInSession(String name) {
         for (UserDTO u : userOnline) {
-            if(u.getUser().getName().equals(name)) {
+            if (u.getUser().getName().equals(name)) {
                 return u;
             }
         }
@@ -122,10 +136,18 @@ public class UserService {
                 System.out.println("try save with key " + u.getUser().getSessionKey());
                 userRepository.save(u.getUser());
                 u.getUser().setLastEnter(LocalDateTime.now().minusSeconds(GameConstants.USER_LOGOUT_TIMEOUT));
+                deleteIpCounterFromSessionByIp(u.getUser().getUserLastIp());
             }
         }
         userOnline = userOnline.stream().filter(u -> u.getUser().getLastEnter().isAfter(LocalDateTime.now().minusSeconds(GameConstants.USER_LOGOUT_TIMEOUT))).collect(Collectors.toList());
 
+    }
+
+    public CounterDto getCounter() {
+        if (counterDto == null) {
+            counterDto = new CounterDto(ipCounterRepository.countAllAfter(LocalDate.now().atStartOfDay()), ipCounterRepository.count(), new ArrayList<>(), 0L);
+        }
+        return counterDto;
     }
 
     private UserDTO putUserInSession(User user) {
@@ -137,6 +159,41 @@ public class UserService {
 
         userOnline.add(result);
         return result;
+    }
+
+    private void updateCounter(UserDTO userDTO) {
+
+        String userName = userDTO == null ? "Guest" : userDTO.getUser().getName();
+        String ip = servletRequest.getRemoteAddr();
+        IpCounter online = usersIps.stream().filter(uip -> uip.getIp().equals(ip)).findAny().orElse(null);
+        if (online == null || online.getLastEnter().isBefore(LocalDate.now().atStartOfDay()) || !online.getUserName().equals(userName)) {
+            IpCounter todayIp = ipCounterRepository.findTodayByIp(ip, LocalDate.now().atStartOfDay());
+            if (todayIp == null) {
+                todayIp = new IpCounter();
+            }
+            todayIp.setUserName(userName);
+            todayIp.setIp(ip);
+            todayIp.setLastEnter(LocalDateTime.now());
+            deleteIpCounterFromSessionByIp(ip);
+            usersIps.add(ipCounterRepository.save(todayIp));
+            if (userName.equals("Guest")) {
+                counterDto.setGuestsOnline(counterDto.getGuestsOnline() + 1);
+            } else {
+                counterDto.getUsersOnline().add(userName);
+            }
+        }
+    }
+
+    private void deleteIpCounterFromSessionByIp(String ip) {
+        IpCounter ipCounter = usersIps.stream().filter(ipc -> ipc.getIp().equals(ip)).findAny().orElse(null);
+        if (ipCounter != null) {
+            if (ipCounter.getUserName().equals("Guest")) {
+                counterDto.setGuestsOnline(counterDto.getGuestsOnline() - 1);
+            } else {
+                counterDto.getUsersOnline().remove(ipCounter.getUserName());
+            }
+            usersIps.remove(ipCounter);
+        }
     }
 
 }
