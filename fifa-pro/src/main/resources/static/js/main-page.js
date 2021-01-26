@@ -344,4 +344,26 @@ localStorage.removeItem("matchType");
         $("#league-games-by-id").hide();
     }
 
+    $.ajax({
+        url : "counter/online",
+        type : "GET",
+        success : function (d) {
+            if (d.usersOnline.length == 0) {
+                $("#user-count").text("Юзеров онлайн нет");
+            } else {
+                uss = 0;
+                for (u in d.usersOnline) {
+                    if (uss == 0) {
+                        uss = "Онлайн: " + d.usersOnline[u];
+                    } else {
+                        uss = ", " + d.usersOnline[u];
+                    }
+                }
+                $("#user-count").text(uss);
+            }
+            $("#guest-count").text("Гостей:" + d.guestsOnline);
+            $("#today-count").text("Сегодня: " + d.onlineToday);
+            $("#all-count").text("Всего: " + d.onlineAllTime);
+        }
+    })
 });

@@ -70,3 +70,8 @@ body {
     bottom:0px;
 }
 
+.counter {
+    position:absolute;
+    bottom:5px;
+    right:5px;
+}
