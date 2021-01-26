@@ -170,6 +170,8 @@ public class UserService {
             IpCounter todayIp = ipCounterRepository.findTodayByIp(ip, LocalDate.now().atStartOfDay());
             if (todayIp == null) {
                 todayIp = new IpCounter();
+                counterDto.setOnlineToday(counterDto.getOnlineToday() + 1);
+                counterDto.setOnlineAllTime(counterDto.getOnlineAllTime() + 1);
             }
             todayIp.setUserName(userName);
             todayIp.setIp(ip);

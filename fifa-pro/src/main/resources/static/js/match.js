@@ -137,14 +137,12 @@ var playSide = 1;
             $(".ball-go>img").addClass('green-ball').removeClass('red-ball');
             $("#player-arrows-1").show();
             $("#player-arrows-2").hide();
-//        .css()
-            $("#playerName").text(data.firstPlayer.name);
         } else {
             $(".ball-go>img").addClass('red-ball').removeClass('green-ball');
             $("#player-arrows-2").show();
             $("#player-arrows-1").hide();
-            $("#playerName").text(data.secondPlayer.name);
         }
+        $("#playerName").text(data.firstTeamBall ? data.firstPlayer.name : data.secondPlayer.name);
         writeStatistic(data.statisticDto, data.matchDto.firstTeam.team.name, data.matchDto.secondTeam.team.name);
 
         $(".ball-go").animate({left: data.ballPosition.x, top: data.ballPosition.y});
