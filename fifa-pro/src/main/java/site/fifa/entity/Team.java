@@ -17,10 +17,13 @@ public class Team {
     @OneToOne
     @JoinColumn(name = "country_id")
     private Country country;
+    @OneToOne
+    @JoinColumn(name = "stadium_id")
+    Stadium stadium;
 
     private String name;
-
+    private String image;
     private Long leagueId;
-
     private int money;
+    private int funs;
 }

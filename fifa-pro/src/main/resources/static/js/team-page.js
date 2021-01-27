@@ -19,6 +19,7 @@ var typeValues = ["GK", "CD", "MD", "ST"];
                 localStorage.setItem("teamadm",0);
                 window.location.href = "index.html";
             } else {
+                updateStadiumInfo(teamData.team.stadium, teamData.team.funs);
                 localStorage.setItem("teamadm",teamData.team.id);
                 var money = teamData.team.money;
                 $("#title").text(teamData.team.name);
@@ -162,5 +163,36 @@ var typeValues = ["GK", "CD", "MD", "ST"];
             }
         });
     });
+
+    function updateStadiumInfo(stadium, funs) {
+        info = '';
+        if (stadium.name == null) {
+            info = 'Обычный';
+        } else {
+            info = stadium.name;
+        }
+        info += ". Вместимость:" + stadium.population + ', фанатов: ' + funs + ', билеты по: ' + stadium.ticketPrice;
+        $("#stadium-info").text(info);
+        $.ajax({
+            url : 'match/last-home/' + teamDataMain.team.id,
+            method : 'GET',
+            success : function(last) {
+                if (last.length != 0) {
+                    $("#last-game-info").text('На последнем матче было ' + last.funs + ' болельщиков')
+                }
+            }
+        })
+    }
+
+    $("#price-confirm").click(function(){
+        $.ajax({
+            url : "stadium/change-price",
+            type : "POST",
+            data : {price : $("#price-form").val(), stadiumId : teamDataMain.team.stadium.id},
+            success : function() {
+                window.location.reload()
+            }
+        })
+    })
 
 });

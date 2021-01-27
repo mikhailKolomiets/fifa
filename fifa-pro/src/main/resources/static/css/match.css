@@ -55,7 +55,8 @@ body {
 }
 .stati {
     position:absolute;
-    right: 20px
+    top: 20px;
+    left: 1120px
 }
 
 .right-top {
@@ -72,6 +73,28 @@ body {
 
 .counter {
     position:absolute;
-    bottom:5px;
-    right:5px;
+    bottom:20px;
+    right:20px
+}
+
+#first-team-chance-bar {
+    width:450px;
+    background-color: #ddd;
+}
+#first-team-chance-show {
+    width:150px;
+    height:6px;
+    background-color: #4CAF50;
+}
+#second-team-chance-bar {
+    position:relative;
+    left: 650px;
+    width: 450px;
+    bottom: 6px;
+    background-color: red;
+}
+#second-team-chance-show {
+    width: 300px;
+    height: 6px;
+    background-color: #ddd;
 }

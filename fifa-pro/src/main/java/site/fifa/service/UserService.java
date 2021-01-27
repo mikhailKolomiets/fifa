@@ -162,6 +162,7 @@ public class UserService {
     }
 
     private void updateCounter(UserDTO userDTO) {
+        getCounter();
 
         String userName = userDTO == null ? "Guest" : userDTO.getUser().getName();
         String ip = servletRequest.getRemoteAddr();

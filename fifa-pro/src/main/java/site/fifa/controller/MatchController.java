@@ -8,6 +8,7 @@ import site.fifa.dto.MatchDto;
 import site.fifa.dto.MatchStepDto;
 import site.fifa.dto.PlaySide;
 import site.fifa.dto.StatisticDto;
+import site.fifa.entity.match.MatchPlay;
 import site.fifa.service.MatchService;
 import site.fifa.service.TeamService;
 
@@ -67,6 +68,12 @@ public class MatchController {
     @GetMapping("league-games/{leagueId}")
     public List<StatisticDto> getLeagueGames(@PathVariable Long leagueId) {
         return matchService.getLeagueStatisticOfMatches(leagueId);
+    }
+
+    @ApiResponses({@ApiResponse(code = 200, message = "Return last home league game")})
+    @GetMapping("last-home/{teamId}")
+    public MatchPlay getLastHomeGame(@PathVariable Long teamId) {
+        return matchService.getLastLeagueGame(teamId);
     }
 
 }
