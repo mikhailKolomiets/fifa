@@ -3,6 +3,7 @@ package site.fifa.dto;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import site.fifa.entity.Player;
+import site.fifa.entity.Stadium;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -28,9 +29,12 @@ public class MatchStepDto {
     private StatisticDto statisticDto = new StatisticDto();
     private ArrayList<String> log = new ArrayList<>();
     private Point ballPosition = new Point();
+    private Stadium stadium;
+    private int additionHomeMaxChance;
+    private int funs;
 
     public void plusChance(int team) {
-        if (team == 1 && firstTeamChance <= 100) {
+        if (team == 1 && firstTeamChance <= 100 + additionHomeMaxChance) {
             firstTeamChance += 5;
         } else if (secondTeamChance <= 100) {
             secondTeamChance += 5;

@@ -26,10 +26,11 @@ public class Statistic {
     private int stGoalKick;
     private int ftPercentageHoldBall;
     private int stPercentageHoldBall;
+    private int funs;
 
     // TODO: 9/12/20  add cards anf foul fields
 
-    public Statistic(Long matchId, StatisticDto statisticDto) {
+    public Statistic(Long matchId, StatisticDto statisticDto, int funs) {
         this.matchId = matchId;
         this.ftGoals = statisticDto.getGoals().x;
         this.stGoals = statisticDto.getGoals().y;
@@ -37,6 +38,7 @@ public class Statistic {
         this.stGoalKick = statisticDto.getGoalKick().y;
         this.ftPercentageHoldBall = statisticDto.getPercentageHoldBall().x;
         this.stPercentageHoldBall = statisticDto.getPercentageHoldBall().y;
+        this.funs = funs;
     }
 
 }

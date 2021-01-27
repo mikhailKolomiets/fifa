@@ -127,6 +127,8 @@ var playSide = 1;
     }
 
     function showArea(data) {
+        $("#first-team-chance-show").css('width', data.firstTeamChance * 3 + "px");
+        $("#second-team-chance-show").css('width', 450 - data.secondTeamChance * 3 + "px");
         result = "";
         if (localStorage.getItem("p2p") == "second") {
             data.firstTeamBall = !data.firstTeamBall;
@@ -143,13 +145,19 @@ var playSide = 1;
             $("#player-arrows-1").hide();
         }
         $("#playerName").text(data.firstTeamBall ? data.firstPlayer.name : data.secondPlayer.name);
-        writeStatistic(data.statisticDto, data.matchDto.firstTeam.team.name, data.matchDto.secondTeam.team.name);
+        writeStatistic(data.statisticDto, data.matchDto.firstTeam.team, data.matchDto.secondTeam.team);
 
         $(".ball-go").animate({left: data.ballPosition.x, top: data.ballPosition.y});
     }
 
-    function writeStatistic(stat, ft, st) {
-        var tableContent = "<table> <tr> <th>" + ft + "</th><th>" + stat.goals.x + ":" + stat.goals.y + "</th><th>" + st + "</th></tr>"
+    function writeStatistic(stat, firstTeam, secondTeam) {
+        ft = firstTeam.name;
+        st = secondTeam.name;
+        fti = firstTeam.image;
+        sti = secondTeam.image;
+        var tableContent = "<table>"
+        + '<tr> <th><img src="' + fti + '" width="165" height="137"></th><th>' + stat.goals.x + ":" + stat.goals.y + '<th><img src="' + sti + '" width="165" height="137"></th><th></tr>'
+        + "<tr> <th>" + ft + "</th><th></th><th>" + st + "</th></tr>"
         + "<tr><th>" + stat.goalKick.x + "</th><th>Ударов</th><th>" + stat.goalKick.y + "</th></tr>"
         + "<tr><th>" + stat.percentageHoldBall.x + "</th><th>%BM</th><th>" + stat.percentageHoldBall.y + "</th></tr>";
 

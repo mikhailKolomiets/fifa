@@ -22,6 +22,7 @@ public class MatchPlay {
     private LocalDate started;
     private Long firstTeamId;
     private Long secondTeamId;
+    private int funs;
 
     public MatchPlay(MatchStatus status, MatchType type, LocalDate started, Long firstTeamId, Long secondTeamId) {
         this.status = status;
