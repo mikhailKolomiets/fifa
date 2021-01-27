@@ -14,6 +14,8 @@ import site.fifa.entity.match.GoalsInMatch;
 import site.fifa.entity.match.MatchPlay;
 import site.fifa.entity.match.MatchStatus;
 import site.fifa.entity.match.MatchType;
+import site.fifa.entity.message.Message;
+import site.fifa.entity.message.MessageTypeEnum;
 import site.fifa.repository.*;
 
 import javax.annotation.PostConstruct;
@@ -51,6 +53,8 @@ public class MatchService {
     private UserRepository userRepository;
     @Autowired
     private StadiumRepository stadiumRepository;
+    @Autowired
+    private MessageRepository messageRepository;
 
     private static ArrayList<MatchStepDto> matchStepDtos = new ArrayList<>();
     private static ArrayList<StatisticDto> lastMatches = new ArrayList<>();
@@ -115,6 +119,7 @@ public class MatchService {
                 if (matchStepDto.getMatchDto().getMatchType() == MatchType.LEAGUE) {
                     updatePlayersExperience(matchStepDto);
                     updateLeagueTable(matchStepDto);
+
                 }
             }
             return matchStepDto;
@@ -576,7 +581,10 @@ public class MatchService {
         Team secondTeam = matchStepDto.getMatchDto().getSecondTeam().getTeam();
         Stadium stadium = matchStepDto.getStadium();
         // money from league match
-        firstTeam.setMoney(firstTeam.getMoney() + matchStepDto.getFuns() * stadium.getTicketPrice());
+        int moneyEarned = matchStepDto.getFuns() * stadium.getTicketPrice();
+        firstTeam.setMoney(firstTeam.getMoney() + moneyEarned);
+        writeTeamMessages(firstTeam.getId(),
+                matchStepDto.getMatchDto().getDate() + " был проведен домашний матч лиги. Присутствовало " + matchStepDto.getFuns() + " болельщиков. Прибыль: " + moneyEarned);
         //funs update
         firstTeam.setFuns(Math.max(0, firstTeam.getFuns() + f * GameConstants.ADD_FUNS_BY_GOAL - s * GameConstants.LOSE_FUNS_BY_GOAL));
         secondTeam.setFuns(Math.max(0, secondTeam.getFuns() + s * GameConstants.ADD_FUNS_BY_GOAL - f * GameConstants.LOSE_FUNS_BY_GOAL));
@@ -589,6 +597,16 @@ public class MatchService {
         for (LeagueTableItem l : leagueTableItems) {
             leagueTableItemRepository.updatePosition(++i, l.getId());
         }
+    }
+
+    private void writeTeamMessages(Long teamId, String body) {
+        Message message = new Message();
+        message.setToId(teamId);
+        message.setBody(body);
+        message.setType(MessageTypeEnum.TEAM_ACTION);
+        message.setCreateTime(LocalDateTime.now());
+
+        messageRepository.save(message);
     }
 
     private void updateBallCoordinate(MatchStepDto matchStepDto, boolean startPoint) {
