@@ -129,7 +129,6 @@ public class UserService {
 
     @Scheduled(cron = "10 * * * * *")
     public void deleteByTimeOut() {
-        System.out.println("check session expired users. Online: " + userOnline.size());
         for (UserDTO u : userOnline) {
             if (u.getUser().getLastEnter().isBefore(LocalDateTime.now().minusSeconds(GameConstants.USER_LOGOUT_TIMEOUT))) {
                 u.getUser().setLastEnter(LocalDateTime.now());
@@ -147,6 +146,8 @@ public class UserService {
         if (counterDto == null) {
             counterDto = new CounterDto(ipCounterRepository.countAllAfter(LocalDate.now().atStartOfDay()), ipCounterRepository.count(), new ArrayList<>(), 0L);
         }
+        usersIps = usersIps.stream().filter(ips -> ips.getLastEnter().isAfter(LocalDateTime.now().minusSeconds(GameConstants.USER_LOGOUT_TIMEOUT))).collect(Collectors.toList());
+        counterDto.setGuestsOnline(usersIps.stream().filter(ips -> ips.getUserName().equals("Guest")).count());
         return counterDto;
     }
 
@@ -190,11 +191,7 @@ public class UserService {
     private void deleteIpCounterFromSessionByIp(String ip) {
         IpCounter ipCounter = usersIps.stream().filter(ipc -> ipc.getIp().equals(ip)).findAny().orElse(null);
         if (ipCounter != null) {
-            if (ipCounter.getUserName().equals("Guest")) {
-                counterDto.setGuestsOnline(counterDto.getGuestsOnline() - 1);
-            } else {
-                counterDto.getUsersOnline().remove(ipCounter.getUserName());
-            }
+            counterDto.getUsersOnline().remove(ipCounter.getUserName());
             usersIps.remove(ipCounter);
         }
     }
