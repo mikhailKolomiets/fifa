@@ -4,6 +4,13 @@ body {
 .red {
     color : red
 }
+.green {
+    color : green
+}
+.green-button {
+    color : white;
+    background-color: #4CAF50
+}
 .ball-go {
     position:absolute;
     z-index: 10;

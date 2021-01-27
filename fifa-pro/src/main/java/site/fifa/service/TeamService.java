@@ -6,9 +6,13 @@ import org.springframework.transaction.annotation.Transactional;
 import site.fifa.dto.NewTeamCreateRequest;
 import site.fifa.dto.TeamDTO;
 import site.fifa.entity.*;
+import site.fifa.entity.message.Message;
+import site.fifa.entity.message.MessageTypeEnum;
 import site.fifa.repository.*;
 
 import javax.servlet.ServletRequest;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,6 +29,7 @@ public class TeamService {
     private final ServletRequest servletRequest;
     private final UserRepository userRepository;
     private final StadiumService stadiumService;
+    private final MessageRepository messageRepository;
 
     public TeamDTO createNewTeam(NewTeamCreateRequest request) {
 
@@ -99,6 +104,10 @@ public class TeamService {
 
     @Transactional
     public void buyPlayer(Long playerId, Long teamId) {
+        User user = userRepository.findFirstByUserLastIp(servletRequest.getRemoteAddr());
+        if (user == null || !user.getTeamId().equals(teamId)) {
+            return;
+        }
         Team team = teamRepository.findById(teamId).orElse(null);
         Player player = playerRepository.findById(playerId).orElse(null);
         if (player != null && team != null) {
@@ -115,6 +124,13 @@ public class TeamService {
                     updateOrSave(teamFrom);
                 }
             }
+            Message message = new Message();
+            message.setToId(teamId);
+            message.setBody(LocalDate.now() + " " + user.getName() + " купил " + player.getName() + " за " + price);
+            message.setType(MessageTypeEnum.TEAM_ACTION);
+            message.setCreateTime(LocalDateTime.now());
+
+            messageRepository.save(message);
 
             player.setPrice(0);
             player.setTeamId(teamId);

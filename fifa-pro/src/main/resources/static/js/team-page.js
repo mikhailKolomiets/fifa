@@ -42,6 +42,15 @@ var typeValues = ["GK", "CD", "MD", "ST"];
                             transferTableGenerate();
                         }
                     });
+        $.ajax({
+            url : "message/team-new-amount/" + teamDataMain.team.id,
+            type : "GET",
+            success : function(message) {
+                if (message != 0) {
+                    $("#team-messages").css({"color":"white",'background-color':'green'}).text('Новых сообщений ' + message)
+                }
+            }
+        })
             }
         }
     });
@@ -191,6 +200,33 @@ var typeValues = ["GK", "CD", "MD", "ST"];
             data : {price : $("#price-form").val(), stadiumId : teamDataMain.team.stadium.id},
             success : function() {
                 window.location.reload()
+            }
+        })
+    })
+$("#team-messages")
+    $("#team-messages").click(function(){
+        $.ajax({
+            url : "message/team/" + teamDataMain.team.id,
+            type : "GET",
+            success : function(message) {
+                if (message.length == 0) {
+                    $("#team-messages-show").text('Сообщений пока нет')
+                } else {
+                    haveNew = false;
+                    messages = '';
+                    for (i in message) {
+                        if (message[i].readed == false) {
+                            haveNew = true;
+                            messages += '<b class="green">1' + message[i].body + '</b><br>'
+                        } else {
+                            messages += message[i].body + '<br>'
+                        }
+                    }
+                    $("#team-messages-show").html(messages);
+                    if (haveNew) {
+                        $.ajax({url : "message/team/make-all-read", type : 'PUT', data : {'teamId': teamDataMain.team.id}})
+                    }
+                }
             }
         })
     })
