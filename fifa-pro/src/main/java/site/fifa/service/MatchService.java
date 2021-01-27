@@ -1,5 +1,6 @@
 package site.fifa.service;
 
+import lombok.Synchronized;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -19,6 +20,8 @@ import javax.annotation.PostConstruct;
 import javax.servlet.ServletRequest;
 import java.awt.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -46,6 +49,8 @@ public class MatchService {
     private ServletRequest servletRequest;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private StadiumRepository stadiumRepository;
 
     private static ArrayList<MatchStepDto> matchStepDtos = new ArrayList<>();
     private static ArrayList<StatisticDto> lastMatches = new ArrayList<>();
@@ -67,20 +72,29 @@ public class MatchService {
         }
 
         MatchStepDto matchStepDto = new MatchStepDto();
-        matchStepDto.setMatchDto(new MatchDto(match.getId(), PlaySide.CPU, LocalDate.now(), teamService.getTeamById(firstTeamId), teamService.getTeamById(secondTeamId)));
+        matchStepDto.setMatchDto(new MatchDto(match.getId(), PlaySide.CPU, LocalDate.now(), teamService.getTeamById(firstTeamId), teamService.getTeamById(secondTeamId), match.getType()));
         matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
         matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
         matchStepDto.getStatisticDto().setFirstTeamName(matchStepDto.getMatchDto().getFirstTeam().getTeam().getName());
         matchStepDto.getStatisticDto().setSecondTeamName(matchStepDto.getMatchDto().getSecondTeam().getTeam().getName());
+        matchStepDto.setStadium(matchStepDto.getMatchDto().getFirstTeam().getTeam().getStadium());
+        calculatePopulation(matchStepDto);
 
         matchStepDtos.add(matchStepDto);
         return matchStepDto.getMatchDto();
     }
 
+    @Synchronized
     @Transactional
     public MatchStepDto makeGameStep(Long matchId, PlaySide playSide, int action) {
 
         MatchStepDto matchStepDto = getMatchStepDtoById(matchId);
+        // todo prevent incorrect db writing!!!
+        if (matchStepDto.getStep() > 100) {
+            System.out.println("system fail! check match play and statistic into db with mp.id=" + matchId);
+            matchStepDto.setLastStepLog(matchStepDto.showGoals());
+            return matchStepDto;
+        }
         matchStepDto.increaseStep();
         matchStepDto.getStatisticDto().countPercentageByTeamHold(matchStepDto.isFirstTeamBall());
         String stepLog = matchStepDto.getStep() + " м: ";
@@ -93,11 +107,14 @@ public class MatchService {
                 matchStepDto.setLastStepLog(matchStepDto.showGoals());
                 matchStepDto.getLog().add("Матч окончен!" + matchStepDto.getLastStepLog());
                 lastMatches.add(matchStepDto.getStatisticDto());
-                statisticService.saveStatistic(new Statistic(matchId, matchStepDto.getStatisticDto()));
-                matchRepository.updateMatchStatusById(MatchStatus.FINISHED, matchId);
-                updateLeagueTable(matchStepDto);
-                if (action > 0) {
+                statisticService.saveStatistic(new Statistic(matchId, matchStepDto.getStatisticDto(), matchStepDto.getFuns()));
+                MatchPlay matchPlay = matchRepository.findById(matchId).orElse(new MatchPlay());
+                matchPlay.setStatus(MatchStatus.FINISHED);
+                matchPlay.setFuns(matchStepDto.getFuns());
+                matchRepository.save(matchPlay);
+                if (matchStepDto.getMatchDto().getMatchType() == MatchType.LEAGUE) {
                     updatePlayersExperience(matchStepDto);
+                    updateLeagueTable(matchStepDto);
                 }
             }
             return matchStepDto;
@@ -384,13 +401,15 @@ public class MatchService {
         matchRepository.resetAllMatches();
         matchRepository.deleteAllFriendlyMatches();
 
+        LocalDateTime beginSimulateTime;
         for (MatchPlay matchPlay : matchPlayList) {
+            beginSimulateTime = LocalDateTime.now();
             matchDto = startGame(matchPlay.getFirstTeamId(), matchPlay.getSecondTeamId());
             matchStepDto = makeGameStep(matchDto.getMatchId(), PlaySide.CPU, 1);
             while (!matchStepDto.getLastStepLog().equals(matchStepDto.showGoals())) {
                 matchStepDto = makeGameStep(matchDto.getMatchId(), PlaySide.CPU, 1);
             }
-            System.out.println(matchStepDto.showGoals());
+            System.out.println(matchStepDto.showGoals() + " simulation time: " + ChronoUnit.SECONDS.between(beginSimulateTime, LocalDateTime.now()) + "s");
         }
     }
 
@@ -402,7 +421,7 @@ public class MatchService {
             List<MatchPlay> matchPlays = matchRepository.getByStarted(LocalDate.now());
             for (MatchPlay m : matchPlays) {
                 if (m.getStatus() == MatchStatus.CREATED && (user.getTeamId().equals(m.getFirstTeamId()) || user.getTeamId().equals(m.getSecondTeamId())))
-                    result.add(new MatchDto(m.getId(), PlaySide.CPU, m.getStarted(), teamService.getTeamById(m.getFirstTeamId()), teamService.getTeamById(m.getSecondTeamId())));
+                    result.add(new MatchDto(m.getId(), PlaySide.CPU, m.getStarted(), teamService.getTeamById(m.getFirstTeamId()), teamService.getTeamById(m.getSecondTeamId()), m.getType()));
             }
         }
         result.addAll(0, matchStepDtos.stream().filter(msd -> msd.getMatchDto().getPlaySide() == PlaySide.FiRST_TEAM).map(MatchStepDto::getMatchDto).collect(Collectors.toList()));
@@ -467,6 +486,10 @@ public class MatchService {
             playerRepository.save(player);
         }
 
+    }
+
+    public MatchPlay getLastLeagueGame(Long teamId) {
+        return matchRepository.getLastLeagueHomeGame(teamId);
     }
 
     private int countAndUpdatePlayerExperience(Player player) {
@@ -539,9 +562,6 @@ public class MatchService {
     }
 
     private void updateLeagueTable(MatchStepDto matchStepDto) {
-        MatchPlay matchPlay = matchRepository.findById(matchStepDto.getMatchDto().getMatchId()).orElse(null);
-        if (matchPlay == null || matchPlay.getType() != MatchType.LEAGUE)
-            return;
         int f = matchStepDto.getGoalFirstTeam();
         int s = matchStepDto.getGoalSecondTeam();
         leagueTableItemRepository.increaseDataForLeagueTable(f > s ? 1 : 0, f < s ? 1 : 0, f == s ? 1 : 0, f, s, f > s ? 3 : f == s ? 1 : 0,
@@ -552,12 +572,14 @@ public class MatchService {
         );
 
         List<LeagueTableItem> leagueTableItems = leagueTableItemRepository.getByLeagueId(matchStepDto.getMatchDto().getFirstTeam().getTeam().getLeagueId());
-        int firstTeamCoefficient = leagueTableItems.size() - matchStepDto.getMatchDto().getFirstTeam().getLeaguePosition() + 1;
-        int secondTeamCoefficient = leagueTableItems.size() - matchStepDto.getMatchDto().getSecondTeam().getLeaguePosition() + 1;
         Team firstTeam = matchStepDto.getMatchDto().getFirstTeam().getTeam();
         Team secondTeam = matchStepDto.getMatchDto().getSecondTeam().getTeam();
-        firstTeam.setMoney(firstTeam.getMoney() + firstTeamCoefficient * (f > s ? 5 : f == s ? 3 : 1));
-        secondTeam.setMoney(secondTeam.getMoney() + secondTeamCoefficient * (s > f ? 5 : f == s ? 3 : 1));
+        Stadium stadium = matchStepDto.getStadium();
+        // money from league match
+        firstTeam.setMoney(firstTeam.getMoney() + matchStepDto.getFuns() * stadium.getTicketPrice());
+        //funs update
+        firstTeam.setFuns(Math.max(0, firstTeam.getFuns() + f * GameConstants.ADD_FUNS_BY_GOAL - s * GameConstants.LOSE_FUNS_BY_GOAL));
+        secondTeam.setFuns(Math.max(0, secondTeam.getFuns() + s * GameConstants.ADD_FUNS_BY_GOAL - f * GameConstants.LOSE_FUNS_BY_GOAL));
 
         teamService.updateOrSave(firstTeam);
         teamService.updateOrSave(secondTeam);
@@ -687,6 +709,22 @@ public class MatchService {
                 ));
 
         return result;
+    }
+
+    private void calculatePopulation(MatchStepDto matchStepDto) {
+        Team team = matchStepDto.getMatchDto().getFirstTeam().getTeam();
+        int funs = team.getFuns();
+        Stadium stadium = matchStepDto.getStadium();
+        if (funs != 0 && stadium.getTicketPrice() > 0) {
+            int funPrice = (int) (GameConstants.FUN_TICKET_PRICE * (double) funs / stadium.getType().getPopulation());
+            funPrice = Math.min(funPrice, GameConstants.FUN_TICKET_PRICE);
+            if (funPrice < stadium.getTicketPrice()) {
+                funs = (int) (funs / (double) (stadium.getTicketPrice() / funPrice));
+            }
+        }
+        funs = Math.min(funs, stadium.getType().getPopulation());
+        matchStepDto.setFuns(funs);
+        matchStepDto.setAdditionHomeMaxChance(GameConstants.MAX_ADDITION_CHANCE * funs / stadium.getType().getPopulation());
     }
 
 }

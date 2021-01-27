@@ -24,6 +24,7 @@ public class TeamService {
     private final PlayerRepository playerRepository;
     private final ServletRequest servletRequest;
     private final UserRepository userRepository;
+    private final StadiumService stadiumService;
 
     public TeamDTO createNewTeam(NewTeamCreateRequest request) {
 
@@ -70,6 +71,10 @@ public class TeamService {
         Team team = teamRepository.findById(teamId).orElse(null);
         if (team == null) {
             return null;
+        }
+        if (team.getStadium() == null) {
+            team.setStadium(stadiumService.createDefaultStadium());
+            teamRepository.save(team);
         }
         LeagueTableItem leagueTableItem = leagueTableItemRepository.getByLeagueIdAndTeamId(team.getLeagueId(), teamId).stream().findAny().orElse(null);
 
