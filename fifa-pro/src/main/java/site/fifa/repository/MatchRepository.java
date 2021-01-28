@@ -1,5 +1,6 @@
 package site.fifa.repository;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -11,7 +12,7 @@ import site.fifa.entity.match.MatchStatus;
 import java.time.LocalDate;
 import java.util.List;
 
-public interface MatchRepository extends CrudRepository<MatchPlay, Long> {
+public interface MatchRepository extends JpaRepository<MatchPlay, Long> {
 
     MatchPlay getLastByFirstTeamIdAndSecondTeamIdAndStatus(Long firstTeamId, Long secondTeamId, MatchStatus status);
 

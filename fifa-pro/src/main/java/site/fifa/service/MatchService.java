@@ -115,11 +115,10 @@ public class MatchService {
                 MatchPlay matchPlay = matchRepository.findById(matchId).orElse(new MatchPlay());
                 matchPlay.setStatus(MatchStatus.FINISHED);
                 matchPlay.setFuns(matchStepDto.getFuns());
-                matchRepository.save(matchPlay);
+                matchRepository.saveAndFlush(matchPlay);
                 if (matchStepDto.getMatchDto().getMatchType() == MatchType.LEAGUE) {
                     updatePlayersExperience(matchStepDto);
                     updateLeagueTable(matchStepDto);
-
                 }
             }
             return matchStepDto;
@@ -419,7 +418,6 @@ public class MatchService {
     }
 
     public List<MatchDto> getMatchesForPlayLeaguesGame() {
-        //todo just return all matches for ip user team id for today if his team first
         User user = userRepository.findFirstByUserLastIp(servletRequest.getRemoteAddr());
         List<MatchDto> result = new ArrayList<>();
         if (user != null && user.getTeamId() != null) {
@@ -737,7 +735,11 @@ public class MatchService {
             int funPrice = (int) (GameConstants.FUN_TICKET_PRICE * (double) funs / stadium.getType().getPopulation());
             funPrice = Math.min(funPrice, GameConstants.FUN_TICKET_PRICE);
             if (funPrice < stadium.getTicketPrice()) {
-                funs = (int) (funs / (double) (stadium.getTicketPrice() / funPrice));
+                if (funPrice == 0) {
+                    funs = 0;
+                } else {
+                    funs = (int) (funs / (double) (stadium.getTicketPrice() / funPrice));
+                }
             }
         }
         funs = Math.min(funs, stadium.getType().getPopulation());
