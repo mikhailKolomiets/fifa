@@ -31,6 +31,7 @@ public class TeamService {
     private final UserRepository userRepository;
     private final StadiumService stadiumService;
     private final MessageRepository messageRepository;
+    private final GoalsInMatchRepository goalsInMatchRepository;
 
     public TeamDTO createNewTeam(NewTeamCreateRequest request) {
 
@@ -160,8 +161,10 @@ public class TeamService {
                         .createTime(LocalDateTime.now()).build();
                 messageRepository.save(message);
             }
+            player.setTeamId(null);
         }
-        playerRepository.delete(player);
+        player.setReserve(false);
+        playerRepository.save(player);
     }
 
     public List<Player> sortPlayersForGame(List<Player> players) {
