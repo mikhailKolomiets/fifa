@@ -33,19 +33,19 @@ public class MatchStepDto {
     private int additionHomeMaxChance;
     private int funs;
 
-    public void plusChance(int team) {
+    public void plusChance(int team, int amount) {
         if (team == 1 && firstTeamChance <= 100 + additionHomeMaxChance) {
-            firstTeamChance += 5;
+            firstTeamChance += amount;
         } else if (secondTeamChance <= 100) {
-            secondTeamChance += 5;
+            secondTeamChance += amount;
         }
     }
 
-    public void minusChance(int team) {
+    public void minusChance(int team, int amount) {
         if (team == 1 && firstTeamChance > 20) {
-            firstTeamChance -= 5;
+            firstTeamChance -= amount;
         } else if (secondTeamChance > 20) {
-            secondTeamChance -= 5;
+            secondTeamChance -= amount;
         }
     }
 
