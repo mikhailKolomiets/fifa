@@ -61,4 +61,10 @@ public class PlayerController {
         teamService.buyPlayer(playerId, teamId);
     }
 
+    @ApiResponses({@ApiResponse(code = 200, message = "Delete player from reserve")})
+    @DeleteMapping("delete/{playerId}")
+    public void delete(@PathVariable Long playerId) {
+        teamService.sellPlayerByDelete(playerId);
+    }
+
 }

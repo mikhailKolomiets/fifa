@@ -33,4 +33,7 @@ public interface GameConstants {
     int KEEPER_SKILL_INDEX = 100;
     int KEEPER_SPEED_INDEX = 50;
 
+    //accounting by speed + skill / this
+    int PLAYER_SELL_DELETE_CONSTANT = 10;
+
 }

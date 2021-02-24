@@ -40,6 +40,9 @@ public class PlayerService {
     public Player createPlayerForTransfer() {
         Player player = generateRandomPlayer();
         player.setReserve(true);
+        if (player.getPrice() < player.getSpeed() + player.getSkill()) {
+            player.setPrice(player.getSpeed() + player.getSkill());
+        }
         savePlayer(player);
         return player;
     }
