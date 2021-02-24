@@ -30,6 +30,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static site.fifa.constants.GameConstants.*;
+
 @Service
 public class MatchService {
 
@@ -112,6 +114,7 @@ public class MatchService {
                 matchStepDto.getLog().add("Матч окончен!" + matchStepDto.getLastStepLog());
                 lastMatches.add(matchStepDto.getStatisticDto());
                 statisticService.saveStatistic(new Statistic(matchId, matchStepDto.getStatisticDto(), matchStepDto.getFuns()));
+                goalsInMatchRepository.saveAll(matchStepDto.getStatisticDto().getGoalsList());
                 MatchPlay matchPlay = matchRepository.findById(matchId).orElse(new MatchPlay());
                 matchPlay.setStatus(MatchStatus.FINISHED);
                 matchPlay.setFuns(matchStepDto.getFuns());
@@ -148,8 +151,6 @@ public class MatchService {
             }
         }
 
-        int addition;
-
         // calculate step action algorithm
         if (playSide == PlaySide.CPU) {
             matchStepDto.setSecondTeamAction(randomizeActionByTeamChance(matchStepDto.getSecondTeamChance()));
@@ -161,25 +162,26 @@ public class MatchService {
             action = randomizeActionByTeamChance(matchStepDto.getFirstTeamChance());
         }
 
+        int addition = matchStepDto.getSecondTeamAction() == action ? EQUALS_ACTION_BONUS : 0;
+
         if (matchStepDto.getPosition() == 1) {
 
             if (matchStepDto.isFirstTeamBall()) {
-                addition = matchStepDto.getSecondTeamAction() == action ? 15 : 0;
                 if (action == 1) {
                     matchStepDto.setPosition(2);
-                    if (Math.random() * matchStepDto.getFirstPlayer().getSkill()
-                            > Math.random() * matchStepDto.getSecondPlayer().getSkill() * (matchStepDto.getSecondTeamChance() + addition) / 100) {
+                    if (Math.random() * (matchStepDto.getFirstPlayer().getSkill() * DEFENSE_BALLOUT_SKILL_INDEX + matchStepDto.getFirstPlayer().getSpeed() * DEFENSE_BALLOUT_SPEED_INDEX) * matchStepDto.getFirstTeamChance() / 100
+                            > Math.random() * (matchStepDto.getSecondPlayer().getSkill() * ATTACK_SKILL_INDEX + matchStepDto.getSecondPlayer().getSpeed() * ATTACK_SPEED_INDEX) * (matchStepDto.getSecondTeamChance() + addition) / 100) {
                         stepLog += matchStepDto.getFirstPlayer().getName() + " выбивает мяч";
+                        matchStepDto.plusChance(1,4);
                         matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
                         matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                     } else {
                         matchStepDto.setFirstTeamBall(false);
-                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
-                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                         stepLog += matchStepDto.getSecondPlayer().getName() + " забирает мяч";
+                        matchStepDto.plusChance(2,4);
                     }
-                } else if (action == 2 || action == 3) {
-                    matchStepDto.plusChance(1);
+                } else if (action == 2) {
+                    matchStepDto.plusChance(1,3);
                     if (Math.random() * 100 < Math.random() * matchStepDto.getFirstTeamChance()) {
                         matchStepDto.setPosition(2);
                         stepLog += matchStepDto.getFirstPlayer().getName() + " выбивает мяч";
@@ -190,38 +192,52 @@ public class MatchService {
                         matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.CD));
                         matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.ST));
                     }
+                } else if (action == 3) {
+                    matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.ST));
+                    if (Math.random() * (matchStepDto.getFirstPlayer().getSkill() * DEFENSE_BALLOUT_SKILL_INDEX + matchStepDto.getFirstPlayer().getSpeed() * DEFENSE_BALLOUT_SPEED_INDEX) * matchStepDto.getFirstTeamChance() / 100
+                            > Math.random() * (matchStepDto.getSecondPlayer().getSkill() + matchStepDto.getSecondPlayer().getSpeed() * ATTACK_SPEED_INDEX) * (matchStepDto.getSecondTeamChance() + addition) / 100) {
+                        stepLog += matchStepDto.getFirstPlayer().getName() + " дает пас вратарю";
+                        matchStepDto.plusChance(1, 7);
+                    } else {
+                        stepLog += matchStepDto.getSecondPlayer().getName() + " опасно перехватывает мяч";
+                        matchStepDto.plusChance(2, 4);
+                        matchStepDto.minusChance(1, 5);
+                        matchStepDto.setFirstTeamBall(false);
+                    }
+                    matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.GK));
                 }
             } else {
-                addition = matchStepDto.getSecondTeamAction() == action ? 50 : 0;
                 if (matchStepDto.getSecondTeamAction() == 1) {
                     matchStepDto.getStatisticDto().getGoalKick().y++;
                     matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.GK));
-                    attackFactor = Math.random() * matchStepDto.getSecondPlayer().getSkill() * matchStepDto.getSecondTeamChance() / 100
-                            - Math.random() * matchStepDto.getFirstPlayer().getSkill() * (matchStepDto.getFirstTeamChance() + addition) / 100;
+                    attackFactor = Math.random() * (matchStepDto.getSecondPlayer().getSkill() * ATTACK_SKILL_INDEX + matchStepDto.getSecondPlayer().getSpeed() * ATTACK_SPEED_INDEX) * matchStepDto.getSecondTeamChance() / 100
+                            - Math.random() * (matchStepDto.getFirstPlayer().getSkill() * KEEPER_SKILL_INDEX + matchStepDto.getFirstPlayer().getSpeed() * KEEPER_SPEED_INDEX) * (matchStepDto.getFirstTeamChance() + addition) / 100;
+
+                    matchStepDto.setFirstTeamBall(true);
+                    stepLog += matchStepDto.getFirstPlayer().getName() + attackLog(attackFactor, addition);
                     if (attackFactor > 0) {
                         matchStepDto.setPosition(2);
-                        matchStepDto.setFirstTeamBall(true);
                         matchStepDto.increaseGoal(2);
                         stepLog += matchStepDto.getSecondPlayer().getName() + attackLog(attackFactor, addition) + matchStepDto.showGoals();
                         matchStepDto.getStatisticDto().getGoals().y++;
                         startPointBall = true;
-                        // save goal result
-                        GoalsInMatch goalsInMatch = goalsInMatchRepository.save(new GoalsInMatch(
+                        matchStepDto.getStatisticDto().getGoalsList().add(new GoalsInMatch(
                                 null, matchStepDto.getMatchDto().getMatchId(), matchStepDto.getMatchDto().getSecondTeam().getTeam(), matchStepDto.getSecondPlayer(),
                                 matchStepDto.getStep()
                         ));
-                        matchStepDto.getStatisticDto().getGoalsList().add(goalsInMatch);
-
+                        matchStepDto.minusChance(1, 8);
+                        matchStepDto.plusChance(2,5);
                         matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
                         matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                     } else {
-                        matchStepDto.setFirstTeamBall(true);
-                        stepLog += matchStepDto.getFirstPlayer().getName() + attackLog(attackFactor, addition);
+                        matchStepDto.plusChance(1,2);
+                        matchStepDto.minusChance(2,3);
                     }
                 } else if (matchStepDto.getSecondTeamAction() == 2) {
-                    if (Math.random() * matchStepDto.getSecondPlayer().getSkill() * matchStepDto.getSecondTeamChance() / 100
-                            > Math.random() * matchStepDto.getFirstPlayer().getSkill() * matchStepDto.getFirstTeamChance() / 100) {
-                        matchStepDto.plusChance(2);
+                    if (Math.random() * (matchStepDto.getSecondPlayer().getSkill() * ATTACK_SKILL_INDEX + matchStepDto.getSecondPlayer().getSpeed() * ATTACK_SPEED_INDEX) * matchStepDto.getSecondTeamChance() / 100
+                            > Math.random() * (matchStepDto.getFirstPlayer().getSkill() * DEFENSE_SKILL_INDEX + matchStepDto.getFirstPlayer().getSpeed() * DEFENSE_SPEED_INDEX) * (matchStepDto.getFirstTeamChance() + addition) / 100) {
+                        matchStepDto.plusChance(2,3);
+                        matchStepDto.minusChance(1,1);
                         stepLog += matchStepDto.getSecondPlayer().getName() + " обводит " + matchStepDto.getFirstPlayer().getName();
                         matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.CD));
                     } else {
@@ -231,103 +247,127 @@ public class MatchService {
                     }
                 } else if (matchStepDto.getSecondTeamAction() == 3) {
                     matchStepDto.setPosition(2);
-                    matchStepDto.plusChance(2);
-                    matchStepDto.minusChance(1);
-                    stepLog += matchStepDto.getSecondPlayer().getName() + " делает пас назад";
                     matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
+                    if (Math.random() * (matchStepDto.getSecondPlayer().getSkill() * ATTACK_BALLOUT_SKILL_INDEX + matchStepDto.getSecondPlayer().getSpeed() * ATTACK_BALLOUT_SPEED_INDEX) * matchStepDto.getSecondTeamChance() / 100
+                            > Math.random() * (matchStepDto.getFirstPlayer().getSkill() * MIDDLE_DEFENSE_SKILL_INDEX + matchStepDto.getFirstPlayer().getSpeed() * MIDDLE_DEFENSE_SPEED_INDEX) * (matchStepDto.getFirstTeamChance()) / 130) {
+                        matchStepDto.plusChance(2, 5);
+                        matchStepDto.minusChance(1,5);
+                        stepLog += matchStepDto.getSecondPlayer().getName() + " делает пас назад";
+                    } else {
+                        matchStepDto.plusChance(1, 5);
+                        matchStepDto.minusChance(2,5);
+                        matchStepDto.setFirstTeamBall(true);
+                        stepLog += matchStepDto.getFirstPlayer().getName() + " перехватывает обратную передачу";
+                    }
+
                     matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                 }
             }
         } else if (matchStepDto.getPosition() == 2) {
 
-            addition = matchStepDto.getSecondTeamAction() == action ? 25 : 0;
             if (matchStepDto.isFirstTeamBall()) {
                 if (action == 1) {
-                    if (Math.random() * matchStepDto.getFirstPlayer().getSpeed()
-                            > Math.random() * matchStepDto.getSecondPlayer().getSpeed() * (matchStepDto.getSecondTeamChance() + addition) / 100) {
+                    if (Math.random() * (matchStepDto.getFirstPlayer().getSkill() * MIDDLE_ATTACK_SKILL_INDEX + matchStepDto.getFirstPlayer().getSpeed() * MIDDLE_ATTACK_SPEED_INDEX) * matchStepDto.getFirstTeamChance() / 100
+                            > Math.random() * (matchStepDto.getSecondPlayer().getSkill() * MIDDLE_DEFENSE_SKILL_INDEX + matchStepDto.getSecondPlayer().getSpeed() * MIDDLE_DEFENSE_SPEED_INDEX) * (matchStepDto.getSecondTeamChance() + addition) / 100) {
                         matchStepDto.setPosition(3);
-                        matchStepDto.minusChance(1);
-                        stepLog += matchStepDto.getFirstPlayer().getName() + " передает пас вперед вперед";
+                        matchStepDto.minusChance(2, 2);
+                        stepLog += matchStepDto.getFirstPlayer().getName() + " передает пас вперед";
                         matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.ST));
                         matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.CD));
                     } else {
                         matchStepDto.setFirstTeamBall(false);
+                        matchStepDto.minusChance(1,2);
                         stepLog += matchStepDto.getFirstPlayer().getName() + " теряет мяч";
                     }
                 } else if (action == 2) {
-                    if (Math.random() * matchStepDto.getFirstPlayer().getSkill()
-                            > Math.random() * matchStepDto.getSecondPlayer().getSkill() * matchStepDto.getSecondTeamChance() / 100) {
-                        matchStepDto.plusChance(1);
+                    if (Math.random() * (matchStepDto.getFirstPlayer().getSkill() * MIDDLE_ACTIVE_INDEX + matchStepDto.getFirstPlayer().getSpeed() * MIDDLE_ACTIVE_INDEX) * matchStepDto.getFirstTeamChance() / 100
+                            > Math.random() * (matchStepDto.getSecondPlayer().getSkill() * MIDDLE_DEFENSE_SPEED_INDEX + matchStepDto.getSecondPlayer().getSpeed() * MIDDLE_DEFENSE_SPEED_INDEX) * (matchStepDto.getSecondTeamChance() + addition) / 100) {
+                        matchStepDto.plusChance(1,3);
                         stepLog += matchStepDto.getFirstPlayer().getName() + " укрепляет позицию";
                         matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
                         matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                     } else {
                         matchStepDto.setFirstTeamBall(false);
+                        matchStepDto.minusChance(1, 3);
                         stepLog += matchStepDto.getFirstPlayer().getName() + " теряет мяч";
                         matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
                     }
                 } else if (action == 3) {
-                    matchStepDto.setPosition(1);
-                    matchStepDto.plusChance(1);
-                    matchStepDto.minusChance(2);
-                    stepLog += matchStepDto.getFirstPlayer().getName() + " делает пас назад";
-                    matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.CD));
-                    matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.ST));
+                    if (Math.random() * (matchStepDto.getFirstPlayer().getSkill() * MIDDLE_ACTIVE_INDEX + matchStepDto.getFirstPlayer().getSpeed() * MIDDLE_ACTIVE_INDEX) * matchStepDto.getFirstTeamChance() / 100
+                            > Math.random() * (matchStepDto.getSecondPlayer().getSkill() + matchStepDto.getSecondPlayer().getSpeed() * MIDDLE_ATTACK_SPEED_INDEX) * (matchStepDto.getSecondTeamChance() + addition) / 100) {
+                        matchStepDto.plusChance(1, 5);
+                        matchStepDto.minusChance(2, 1);
+                        matchStepDto.setPosition(1);
+                        stepLog += matchStepDto.getFirstPlayer().getName() + " делает пас назад";
+                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.CD));
+                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.ST));
+                    } else {
+                        stepLog += matchStepDto.getSecondPlayer().getName() + " перехватывает мяч";
+                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
+                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
+                    }
                 }
             } else {
                 if (matchStepDto.getSecondTeamAction() == 1) {
-                    if (Math.random() * matchStepDto.getSecondPlayer().getSpeed()
-                            > Math.random() * matchStepDto.getFirstPlayer().getSpeed() * (matchStepDto.getFirstTeamChance() + addition) / 100) {
+                    if (Math.random() * (matchStepDto.getSecondPlayer().getSkill() * MIDDLE_ATTACK_SKILL_INDEX + matchStepDto.getSecondPlayer().getSpeed() * MIDDLE_ATTACK_SPEED_INDEX) * matchStepDto.getSecondTeamChance() / 100
+                            > Math.random() * (matchStepDto.getFirstPlayer().getSkill() * MIDDLE_DEFENSE_SKILL_INDEX + matchStepDto.getFirstPlayer().getSpeed() * MIDDLE_DEFENSE_SPEED_INDEX) * (matchStepDto.getFirstTeamChance() + addition) / 100) {
                         matchStepDto.setPosition(1);
-                        matchStepDto.minusChance(2);
-                        stepLog += matchStepDto.getSecondPlayer().getName() + " передает мяч вперед";
+                        matchStepDto.minusChance(1, 2);
+                        stepLog += matchStepDto.getSecondPlayer().getName() + " передает пас вперед";
                         matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.CD));
                         matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.ST));
                     } else {
                         matchStepDto.setFirstTeamBall(true);
+                        matchStepDto.minusChance(2,2);
                         stepLog += matchStepDto.getSecondPlayer().getName() + " теряет мяч";
-                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                     }
                 } else if (matchStepDto.getSecondTeamAction() == 2) {
-                    if (Math.random() * matchStepDto.getSecondPlayer().getSkill()
-                            > Math.random() * matchStepDto.getFirstPlayer().getSkill() * matchStepDto.getFirstTeamChance() / 100) {
-                        matchStepDto.plusChance(2);
+                    if (Math.random() * (matchStepDto.getSecondPlayer().getSkill() * MIDDLE_ACTIVE_INDEX + matchStepDto.getSecondPlayer().getSpeed() * MIDDLE_ACTIVE_INDEX) * matchStepDto.getSecondTeamChance() / 100
+                            > Math.random() * (matchStepDto.getFirstPlayer().getSkill() * MIDDLE_DEFENSE_SPEED_INDEX + matchStepDto.getFirstPlayer().getSpeed() * MIDDLE_DEFENSE_SPEED_INDEX) * (matchStepDto.getFirstTeamChance() + addition) / 100) {
+                        matchStepDto.plusChance(2,3);
                         stepLog += matchStepDto.getSecondPlayer().getName() + " укрепляет позицию";
                         matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
                         matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                     } else {
                         matchStepDto.setFirstTeamBall(true);
+                        matchStepDto.minusChance(2, 3);
                         stepLog += matchStepDto.getSecondPlayer().getName() + " теряет мяч";
-                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
+                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                     }
-                } else if (matchStepDto.getSecondTeamAction() == 3) {
-                    matchStepDto.setPosition(3);
-                    matchStepDto.plusChance(2);
-                    matchStepDto.minusChance(1);
-                    stepLog += matchStepDto.getSecondPlayer().getName() + " делает пас назад";
-                    matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.ST));
-                    matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.CD));
+                } else if (action == 3) {
+                    if (Math.random() * (matchStepDto.getSecondPlayer().getSkill() * MIDDLE_ACTIVE_INDEX + matchStepDto.getSecondPlayer().getSpeed() * MIDDLE_ACTIVE_INDEX) * matchStepDto.getSecondTeamChance() / 100
+                            > Math.random() * (matchStepDto.getFirstPlayer().getSkill() + matchStepDto.getFirstPlayer().getSpeed() * MIDDLE_ATTACK_SPEED_INDEX) * (matchStepDto.getFirstTeamChance() + addition) / 100) {
+                        matchStepDto.plusChance(2, 5);
+                        matchStepDto.minusChance(1, 1);
+                        matchStepDto.setPosition(3);
+                        stepLog += matchStepDto.getFirstPlayer().getName() + " делает пас назад";
+                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.ST));
+                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.CD));
+                    } else {
+                        stepLog += matchStepDto.getSecondPlayer().getName() + " перехватывает мяч";
+                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
+                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
+                    }
                 }
             }
         } else if (matchStepDto.getPosition() == 3) {
 
             if (!matchStepDto.isFirstTeamBall()) {
-                addition = matchStepDto.getSecondTeamAction() == action ? 15 : 0;
                 if (matchStepDto.getSecondTeamAction() == 1) {
                     matchStepDto.setPosition(2);
-                    if (Math.random() * matchStepDto.getSecondPlayer().getSkill()
-                            > Math.random() * matchStepDto.getFirstPlayer().getSkill() * (matchStepDto.getFirstTeamChance() + addition) / 100) {
+                    if (Math.random() * (matchStepDto.getSecondPlayer().getSkill() * DEFENSE_BALLOUT_SKILL_INDEX + matchStepDto.getSecondPlayer().getSpeed() * DEFENSE_BALLOUT_SPEED_INDEX) * matchStepDto.getSecondTeamChance() / 100
+                            > Math.random() * (matchStepDto.getFirstPlayer().getSkill() * ATTACK_SKILL_INDEX + matchStepDto.getFirstPlayer().getSpeed() * ATTACK_SPEED_INDEX) * (matchStepDto.getFirstTeamChance() + addition) / 100) {
                         stepLog += matchStepDto.getSecondPlayer().getName() + " выбивает мяч";
+                        matchStepDto.plusChance(2,4);
                         matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
                         matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                     } else {
                         matchStepDto.setFirstTeamBall(true);
                         stepLog += matchStepDto.getFirstPlayer().getName() + " забирает мяч";
-                        matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
-                        matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
+                        matchStepDto.plusChance(1,4);
                     }
-                } else if (matchStepDto.getSecondTeamAction() == 2 || matchStepDto.getSecondTeamAction() == 3) {
-                    matchStepDto.plusChance(2);
+                } else if (matchStepDto.getSecondTeamAction() == 2) {
+                    matchStepDto.plusChance(2,3);
                     if (Math.random() * 100 < Math.random() * matchStepDto.getSecondTeamChance()) {
                         matchStepDto.setPosition(2);
                         stepLog += matchStepDto.getSecondPlayer().getName() + " выбивает мяч";
@@ -338,37 +378,52 @@ public class MatchService {
                         matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.ST));
                         matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.CD));
                     }
+                } else if (matchStepDto.getSecondTeamAction() == 3) {
+                    matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.ST));
+                    if (Math.random() * (matchStepDto.getSecondPlayer().getSkill() * DEFENSE_BALLOUT_SKILL_INDEX + matchStepDto.getSecondPlayer().getSpeed() * DEFENSE_BALLOUT_SPEED_INDEX) * matchStepDto.getSecondTeamChance() / 100
+                            > Math.random() * (matchStepDto.getFirstPlayer().getSkill() + matchStepDto.getFirstPlayer().getSpeed() * ATTACK_SPEED_INDEX) * (matchStepDto.getFirstTeamChance() + addition) / 100) {
+                        stepLog += matchStepDto.getSecondPlayer().getName() + " дает пас вратарю";
+                        matchStepDto.plusChance(2, 7);
+                    } else {
+                        stepLog += matchStepDto.getFirstPlayer().getName() + " опасно перехватывает мяч";
+                        matchStepDto.plusChance(1, 4);
+                        matchStepDto.minusChance(2, 5);
+                        matchStepDto.setFirstTeamBall(true);
+                    }
+                    matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.GK));
                 }
             } else {
-                addition = matchStepDto.getSecondTeamAction() == action ? 50 : 0;
                 if (action == 1) {
                     matchStepDto.getStatisticDto().getGoalKick().x++;
                     matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.GK));
-                    attackFactor = Math.random() * matchStepDto.getFirstPlayer().getSkill() * matchStepDto.getFirstTeamChance() / 100
-                            - Math.random() * matchStepDto.getSecondPlayer().getSkill() * (matchStepDto.getSecondTeamChance() + addition) / 100;
+                    attackFactor = Math.random() * (matchStepDto.getFirstPlayer().getSkill() * ATTACK_SKILL_INDEX + matchStepDto.getFirstPlayer().getSpeed() * ATTACK_SPEED_INDEX) * matchStepDto.getFirstTeamChance() / 100
+                            - Math.random() * (matchStepDto.getSecondPlayer().getSkill() * KEEPER_SKILL_INDEX + matchStepDto.getSecondPlayer().getSpeed() * KEEPER_SPEED_INDEX) * (matchStepDto.getSecondTeamChance() + addition) / 100;
+
+                    matchStepDto.setFirstTeamBall(false);
+                    stepLog += matchStepDto.getSecondPlayer().getName() + attackLog(attackFactor, addition);
                     if (attackFactor > 0) {
                         matchStepDto.setPosition(2);
-                        matchStepDto.setFirstTeamBall(false);
                         matchStepDto.increaseGoal(1);
                         stepLog += matchStepDto.getFirstPlayer().getName() + attackLog(attackFactor, addition) + matchStepDto.showGoals();
                         matchStepDto.getStatisticDto().getGoals().x++;
                         startPointBall = true;
-                        // save goal result
-                        GoalsInMatch goalsInMatch = goalsInMatchRepository.save(new GoalsInMatch(
+                        matchStepDto.getStatisticDto().getGoalsList().add(new GoalsInMatch(
                                 null, matchStepDto.getMatchDto().getMatchId(), matchStepDto.getMatchDto().getFirstTeam().getTeam(), matchStepDto.getFirstPlayer(),
                                 matchStepDto.getStep()
                         ));
-                        matchStepDto.getStatisticDto().getGoalsList().add(goalsInMatch);
+                        matchStepDto.minusChance(2, 8);
+                        matchStepDto.plusChance(1,5);
                         matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
                         matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
                     } else {
-                        matchStepDto.setFirstTeamBall(false);
-                        stepLog += matchStepDto.getSecondPlayer().getName() + attackLog(attackFactor, addition);
+                        matchStepDto.plusChance(2,2);
+                        matchStepDto.minusChance(1,3);
                     }
                 } else if (action == 2) {
-                    if (Math.random() * matchStepDto.getFirstPlayer().getSkill() * matchStepDto.getFirstTeamChance() / 100
-                            > Math.random() * matchStepDto.getSecondPlayer().getSkill() * matchStepDto.getSecondTeamChance() / 100) {
-                        matchStepDto.plusChance(1);
+                    if (Math.random() * (matchStepDto.getFirstPlayer().getSkill() * ATTACK_SKILL_INDEX + matchStepDto.getFirstPlayer().getSpeed() * ATTACK_SPEED_INDEX) * matchStepDto.getFirstTeamChance() / 100
+                            > Math.random() * (matchStepDto.getSecondPlayer().getSkill() * DEFENSE_SKILL_INDEX + matchStepDto.getSecondPlayer().getSpeed() * DEFENSE_SPEED_INDEX) * (matchStepDto.getSecondTeamChance() + addition) / 100) {
+                        matchStepDto.plusChance(1,3);
+                        matchStepDto.minusChance(2,1);
                         stepLog += matchStepDto.getFirstPlayer().getName() + " обводит " + matchStepDto.getSecondPlayer().getName();
                         matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.CD));
                     } else {
@@ -378,11 +433,20 @@ public class MatchService {
                     }
                 } else if (action == 3) {
                     matchStepDto.setPosition(2);
-                    matchStepDto.plusChance(1);
-                    matchStepDto.minusChance(2);
-                    stepLog += matchStepDto.getFirstPlayer().getName() + " делает пас назад";
-                    matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
                     matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
+                    if (Math.random() * (matchStepDto.getFirstPlayer().getSkill() * ATTACK_BALLOUT_SKILL_INDEX + matchStepDto.getFirstPlayer().getSpeed() * ATTACK_BALLOUT_SPEED_INDEX) * matchStepDto.getFirstTeamChance() / 100
+                            > Math.random() * (matchStepDto.getSecondPlayer().getSkill() * MIDDLE_DEFENSE_SKILL_INDEX + matchStepDto.getSecondPlayer().getSpeed() * MIDDLE_DEFENSE_SPEED_INDEX) * (matchStepDto.getSecondTeamChance()) / 130) {
+                        matchStepDto.plusChance(1, 5);
+                        matchStepDto.minusChance(2,5);
+                        stepLog += matchStepDto.getFirstPlayer().getName() + " делает пас назад";
+                    } else {
+                        matchStepDto.plusChance(2, 5);
+                        matchStepDto.minusChance(1,5);
+                        matchStepDto.setFirstTeamBall(false);
+                        stepLog += matchStepDto.getSecondPlayer().getName() + " перехватывает обратную передачу";
+                    }
+
+                    matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
                 }
             }
         }
@@ -486,9 +550,8 @@ public class MatchService {
                 }
             }
             player.setExp(exp);
-            playerRepository.save(player);
         }
-
+        playerRepository.saveAll(players);
     }
 
     public MatchPlay getLastLeagueGame(Long teamId) {
@@ -521,29 +584,29 @@ public class MatchService {
 
     private String attackLog(double factor, int addition) {
         if (addition > 0) {
-            if (factor > 20) {
+            if (factor > 10000) {
                 return " невероятно поклал мяч в девятку из далека!!!!";
-            } else if (factor > 10) {
+            } else if (factor > 5000) {
                 return " обыграл вратаря и забил гол!!!";
             } else if (factor > 0) {
                 return " гол из далека!";
-            } else if (factor < 20) {
+            } else if (factor < 10000) {
                 return " с легкостью берет мяч в руки";
-            } else if (factor < 10) {
+            } else if (factor < 5000) {
                 return " смотрит как мяч пролетает далеко мимо ворот";
             } else if (factor <= 0) {
                 return " реагирует и забирает мяч";
             }
         } else {
-            if (factor > 40) {
+            if (factor > 15000) {
                 return " не оставил шанса вратврю!!!!";
-            } else if (factor > 20) {
+            } else if (factor > 7000) {
                 return " запутал вратаря и точно пробил по воротам!!";
             } else if (factor > 0) {
                 return " забивает гол!";
-            } else if (factor < 40) {
+            } else if (factor < 12000) {
                 return " выбрал правильную позицию и забрал мяч из под ног";
-            } else if (factor < 20) {
+            } else if (factor < 8000) {
                 return " не дотягивается до меча и ... штанга";
             } else if (factor <= 0) {
                 return " делает невероятный сейв!";
