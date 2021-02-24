@@ -103,12 +103,13 @@ var typeValues = ["GK", "CD", "MD", "ST"];
     function tableGenerate(players, change, preName) {
                 var tableContent = preName + '<table>  <tr> <th>NAME</th> <th>SKILL</th> <th>SPEED</th> <th>EXP</th> <th>AGE</th> <th>POSITION</th> <th>PRICE</th> <th>CHANGE</th> <th></th> </tr>';
                 for(i in players) {
+                    deleteButton = players[0].reserve == true ? '<td> <input type="button" value="Продать за ' + Math.floor((players[i].skill + players[i].speed) / 10) +'" class="delsel"/> </td>' : '';
                     tableContent += '<tr><td> <input type = "text" class="playername" value="'+players[i].name+'"/></td>' +
                     '<td> <input type = "hidden" class="playerid" value="'+players[i].id+'"/>' + players[i].skill + '</td> <td>' + players[i].speed + '</td> <td>' + players[i].exp + '</td> <td>' +
                     players[i].age + '</td> <td>' + players[i].type + '</td>' +
                     '<td> <input type = "text" class="playerprice" value="' + players[i].price + '"/></td>'+
                     ' <td>' + generateSelectForReserve(change, players[i].type) + '</td>' +
-                    ' <td> <input type="button" value="edit" class="butsel"/> </td> </tr>'
+                    ' <td> <input type="button" value="edit" class="butsel"/> </td> ' + deleteButton + ' </tr>'
                 }
                 return tableContent + '</table>';
     }
@@ -119,7 +120,7 @@ var typeValues = ["GK", "CD", "MD", "ST"];
                 player = reserve[i];
                 if (player.type == position) {
                     if (selectContent == "-") {
-                    selectContent = '<select class="splayer"> <option value="0">change to</option>';
+                    selectContent = '<select class="splayer"> <option value="0">замена</option>';
                     }
                     selectContent += '<option value="' + player.id + '">' + player.name + '</option>';
                 }
@@ -139,6 +140,20 @@ var typeValues = ["GK", "CD", "MD", "ST"];
             data: {"playerName" : playerName, "playerId" : id, "price" : price},
             success : function(teamData) {
                 infoShow.text("Changed to " + playerName + " and price " + price);
+            }
+        });
+    });
+
+    $(document).on('click', "[class^=delsel]", function() {
+        var row = $(this).parents("tr");    // Find the row
+        var id = row.find('.playerid').val();
+        var price = row.find('.playerprice').val();
+
+        $.ajax({
+            url : "player/delete/" + id,
+            type : "DELETE",
+            success : function(teamData) {
+                window.location.reload();
             }
         });
     });

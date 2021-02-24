@@ -3,6 +3,7 @@ package site.fifa.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import site.fifa.constants.GameConstants;
 import site.fifa.dto.NewTeamCreateRequest;
 import site.fifa.dto.TeamDTO;
 import site.fifa.entity.*;
@@ -138,6 +139,29 @@ public class TeamService {
             updateOrSave(team);
             playerRepository.save(player);
         }
+    }
+
+    @Transactional
+    public void sellPlayerByDelete(Long playerId) {
+        Player player = playerRepository.findById(playerId).orElse(null);
+        if (player == null || !player.isReserve()) {
+            return;
+        }
+        if (player.getTeamId() != null) {
+            Team team = teamRepository.findById(player.getTeamId()).orElse(null);
+            if (team != null) {
+                int playerSellingPrice = (player.getSkill() + player.getSpeed()) / GameConstants.PLAYER_SELL_DELETE_CONSTANT;
+                team.setMoney(team.getMoney() + playerSellingPrice);
+                teamRepository.save(team);
+                Message message = Message.builder()
+                        .body(LocalDate.now() + " " + player.getName() + " продан и удален из проекта за " + playerSellingPrice)
+                        .toId(team.getId())
+                        .type(MessageTypeEnum.TEAM_ACTION)
+                        .createTime(LocalDateTime.now()).build();
+                messageRepository.save(message);
+            }
+        }
+        playerRepository.delete(player);
     }
 
     public List<Player> sortPlayersForGame(List<Player> players) {
