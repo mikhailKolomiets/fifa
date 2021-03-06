@@ -17,6 +17,10 @@ localStorage.setItem("p2p", "false");
 localStorage.removeItem("team1");
 localStorage.removeItem("team2");
 localStorage.removeItem("matchType");
+leagueGames = "";
+playersGoals = "";
+isLeagueGamesShow = true;
+leagueGamesId = 0;
 
     $("#play").click(function() {
     allMenuShow();
@@ -166,13 +170,14 @@ localStorage.removeItem("matchType");
     });
 
     function showLeagueGames(leagueId) {
+    if (leagueGamesId != leagueId)
     $.ajax({
         url : "match/league-games/" + leagueId,
         type : "GET",
         success : function(data) {
-            if (data.length > 0) {
-                $("#league-games-by-id").show();
-            }
+            leagueGamesId = leagueId;
+            updatePlayerGoals(leagueId);
+            $("#league-games-by-id").show();
             leagueGames = "<br>GAMES<br>"
             for (i in data) {
                 leagueGames += data[i].date + ": " + data[i].firstTeamName + " " + (data[i].percentageHoldBall.x == 0 ? "-" : data[i].goals.x + ":" + data[i].goals.y) + " " + data[i].secondTeamName + "<br>"
@@ -180,7 +185,33 @@ localStorage.removeItem("matchType");
         $("#league-games-by-id").html(leagueGames);
         }
     });
+    $("#league-games-by-id").html(leagueGames);
     }
+
+    function updatePlayerGoals(leagueId) {
+        $.ajax({
+            url : "player/get-goals/" + leagueId,
+            type : "GET",
+            success : function(data) {
+                playersGoals = "<br>GOALS<br>"
+                n = 1
+                for(i in data) {
+                    d = data[i]
+                    if (n <= 10)
+                    playersGoals += n++ + ' ' + d.player.name + '(' + d.teamName + ') ' + d.goalsInLeague + '<br>'
+                }
+            }
+        })
+    }
+
+    $("#league-games-by-id").click(f => {
+        isLeagueGamesShow = !isLeagueGamesShow;
+        if (isLeagueGamesShow) {
+            showLeagueGames(leagueGamesId);
+        } else {
+            $("#league-games-by-id").html(playersGoals);
+        }
+    })
 
     $.ajax({
         url : "match/last-league-matches",
