@@ -366,4 +366,7 @@ localStorage.removeItem("matchType");
             $("#all-count").text("Всего: " + d.onlineAllTime);
         }
     })
+
+$("#wiki").click(f => window.location.href = "wiki.html")
+
 });
