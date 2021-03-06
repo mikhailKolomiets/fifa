@@ -1,0 +1,11 @@
+body {
+  background-color:#9DC183;
+}
+.menu {
+    position:absolute;
+    right:73%;
+}
+.description-style {
+    position:absolute;
+    left:32%;
+}
