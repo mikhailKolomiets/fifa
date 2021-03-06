@@ -223,7 +223,7 @@ public class MatchService {
                         startPointBall = true;
                         matchStepDto.getStatisticDto().getGoalsList().add(new GoalsInMatch(
                                 null, matchStepDto.getMatchDto().getMatchId(), matchStepDto.getMatchDto().getSecondTeam().getTeam(), matchStepDto.getSecondPlayer(),
-                                matchStepDto.getStep()
+                                matchStepDto.getStep(), matchStepDto.getMatchDto().getFirstTeam().getTeam().getLeagueId()
                         ));
                         matchStepDto.minusChance(1, 8);
                         matchStepDto.plusChance(2,5);
@@ -409,7 +409,7 @@ public class MatchService {
                         startPointBall = true;
                         matchStepDto.getStatisticDto().getGoalsList().add(new GoalsInMatch(
                                 null, matchStepDto.getMatchDto().getMatchId(), matchStepDto.getMatchDto().getFirstTeam().getTeam(), matchStepDto.getFirstPlayer(),
-                                matchStepDto.getStep()
+                                matchStepDto.getStep(), matchStepDto.getMatchDto().getFirstTeam().getTeam().getLeagueId()
                         ));
                         matchStepDto.minusChance(2, 8);
                         matchStepDto.plusChance(1,5);

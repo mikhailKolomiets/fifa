@@ -26,4 +26,5 @@ public class GoalsInMatch {
     @JoinColumn(name = "player")
     private Player player;
     private int gameTime;
+    private Long leagueId;
 }
