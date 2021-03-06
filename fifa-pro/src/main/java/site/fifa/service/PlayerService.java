@@ -3,8 +3,11 @@ package site.fifa.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import site.fifa.dto.PlayerGoalInLeague;
 import site.fifa.entity.Player;
 import site.fifa.entity.PlayerType;
+import site.fifa.entity.match.GoalsInMatch;
+import site.fifa.repository.GoalsInMatchRepository;
 import site.fifa.repository.PlayerRepository;
 
 import javax.annotation.PostConstruct;
@@ -19,6 +22,8 @@ public class PlayerService {
 
     @Autowired
     private PlayerRepository playerRepository;
+    @Autowired
+    private GoalsInMatchRepository goalsInMatchRepository;
 
     public Player generateRandomPlayer() {
         Player player = new Player();
@@ -111,6 +116,23 @@ public class PlayerService {
 
     public Player buyPlayer(Player player, Long teamId) {
         return player;
+    }
+
+    public List<PlayerGoalInLeague> getSortPlayersByGoalsInLeague(Long leagueId) {
+        List<PlayerGoalInLeague> result = new ArrayList<>();
+        List<GoalsInMatch> goals = goalsInMatchRepository.getByLeagueId(leagueId);
+        int playerGoals;
+        String teamName;
+
+        while (goals.size() > 0) {
+            playerGoals = goals.size();
+            Player player = goals.get(0).getPlayer();
+            teamName = goals.get(0).getTeam().getName();
+            goals = goals.stream().filter(g -> !g.getPlayer().equals(player)).collect(Collectors.toList());
+            result.add(new PlayerGoalInLeague(player, playerGoals - goals.size(), teamName));
+        }
+        result.sort(Comparator.comparingInt(PlayerGoalInLeague::getGoalsInLeague).reversed());
+        return result;
     }
 
     private int generateValueBetween(int first, int second) {

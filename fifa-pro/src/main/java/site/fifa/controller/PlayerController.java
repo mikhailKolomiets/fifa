@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import site.fifa.dto.PlayerGoalInLeague;
 import site.fifa.entity.Player;
 import site.fifa.service.PlayerService;
 import site.fifa.service.TeamService;
@@ -65,6 +66,12 @@ public class PlayerController {
     @DeleteMapping("delete/{playerId}")
     public void delete(@PathVariable Long playerId) {
         teamService.sellPlayerByDelete(playerId);
+    }
+
+    @ApiResponses({@ApiResponse(code = 200, message = "Get players goals statistic")})
+    @GetMapping("get-goals/{leagueId}")
+    public List<PlayerGoalInLeague> getPlayersGoals(@PathVariable Long leagueId) {
+        return playerService.getSortPlayersByGoalsInLeague(leagueId);
     }
 
 }
