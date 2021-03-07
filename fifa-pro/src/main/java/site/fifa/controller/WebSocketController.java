@@ -17,9 +17,8 @@ public class WebSocketController {
 
     @MessageMapping("p2p/{matchId}")
     public MatchStepDto play2player(@DestinationVariable String matchId, String message) {
-        System.out.println(matchId + " " + message);
         // todo update play side according team id in session
-        return matchService.makeGameStep(Long.parseLong(matchId), PlaySide.FiRST_TEAM, Integer.parseInt(message));
+        return matchService.makeGameStep(Long.parseLong(matchId), message.substring(1).equals("1") ? PlaySide.FiRST_TEAM : PlaySide.SECOND_TEAM, Integer.parseInt(message.substring(0,1)));
     }
 
 }
