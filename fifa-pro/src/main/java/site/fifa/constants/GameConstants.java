@@ -36,4 +36,7 @@ public interface GameConstants {
     //accounting by speed + skill / this
     int PLAYER_SELL_DELETE_CONSTANT = 10;
 
+    //step of second player waiting in minutes
+    int MATCH_WITH_PLAYER_TIMEOUT = 1;
+
 }

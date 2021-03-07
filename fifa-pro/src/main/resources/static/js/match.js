@@ -20,7 +20,7 @@ var playSide = 1;
                 $("#player-arrows-2").show();
             }
             mpr.hide();
-            if (localStorage.getItem("p2p") == "first" || localStorage.getItem("p2p") == "second") {
+
                                 socket = new SockJS('/fifa-stomp');
                                         stompClient = Stomp.over(socket);
                                         stompClient.connect({}, function (frame) {
@@ -35,7 +35,7 @@ var playSide = 1;
                                                     }
                                             });
                                         });
-            }
+
         }
     });
 
@@ -49,14 +49,14 @@ var playSide = 1;
     $("#action-8").click(f => makeAction(1));
 
     function makeAction(i) {
-        if (localStorage.getItem("p2p") == "false") {
+
             if (playSide == 2 && i != 2) {
                 i = i == 1 ? 3 : 1;
             }
-            changeButton(i);
-        } else {
+           // changeButton(i);
+
             p2pgame(i);
-        }
+
     }
 
 
@@ -103,12 +103,8 @@ var playSide = 1;
     }
 
     function p2pgame(action) {
-                    room = localStorage.getItem("matchId");
-                    if (localStorage.getItem("p2p") == "first") {
-                        stompClient.send("/app/p2p/" + room, {}, action + "0");
-                    } else {
-                        stompClient.send("/app/p2p/" + room, {}, "" + action);
-                    }
+        room = localStorage.getItem("matchId");
+        stompClient.send("/app/p2p/" + room, {}, action + '' + playSide);
     }
 
     function getLog(data) {

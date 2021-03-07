@@ -6,6 +6,7 @@ import site.fifa.entity.Player;
 import site.fifa.entity.Stadium;
 
 import java.awt.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 @Data
@@ -32,6 +33,7 @@ public class MatchStepDto {
     private Stadium stadium;
     private int additionHomeMaxChance;
     private int funs;
+    private LocalDateTime timeoutTime;
 
     public void plusChance(int team, int amount) {
         if (team == 1 && firstTeamChance <= 100 + additionHomeMaxChance) {

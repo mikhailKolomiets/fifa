@@ -68,16 +68,21 @@ public class MatchService {
 
     @Transactional
     public MatchDto startGame(Long firstTeamId, Long secondTeamId) {
-
-        MatchPlay match = matchRepository.getLastByFirstTeamIdAndSecondTeamIdAndStatus(firstTeamId, secondTeamId, MatchStatus.CREATED);
-
+        MatchPlay match = matchRepository.getLastByFirstTeamIdAndSecondTeamIdAndStatus(firstTeamId, secondTeamId, MatchStatus.STARTED);
+        if (match != null) {
+            return getMatchStepDtoById(match.getId()).getMatchDto();
+        }
+        match = matchRepository.getLastByFirstTeamIdAndSecondTeamIdAndStatus(firstTeamId, secondTeamId, MatchStatus.CREATED);
+        MatchStepDto matchStepDto = new MatchStepDto();
         if (match == null) {
             match = matchRepository.save(new MatchPlay(MatchStatus.STARTED, MatchType.FRIENDLY, LocalDate.now(), firstTeamId, secondTeamId));
         } else {
             matchRepository.updateMatchStatusById(MatchStatus.STARTED, match.getId());
+            if (userRepository.findByTeamId(firstTeamId) != null && userRepository.findByTeamId(secondTeamId) != null) {
+                matchStepDto.setTimeoutTime(LocalDateTime.now());
+            }
         }
 
-        MatchStepDto matchStepDto = new MatchStepDto();
         matchStepDto.setMatchDto(new MatchDto(match.getId(), PlaySide.CPU, LocalDate.now(), teamService.getTeamById(firstTeamId), teamService.getTeamById(secondTeamId), match.getType()));
         matchStepDto.setFirstPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getFirstTeam().getPlayers(), PlayerType.MD));
         matchStepDto.setSecondPlayer(getRandomPlayerByType(matchStepDto.getMatchDto().getSecondTeam().getPlayers(), PlayerType.MD));
@@ -155,11 +160,33 @@ public class MatchService {
         if (playSide == PlaySide.CPU) {
             matchStepDto.setSecondTeamAction(randomizeActionByTeamChance(matchStepDto.getSecondTeamChance()));
             action = randomizeActionByTeamChance(matchStepDto.getFirstTeamChance());
-        } else if (playSide == PlaySide.FiRST_TEAM) {
+        } else if (matchStepDto.getTimeoutTime() == null || matchStepDto.getTimeoutTime().isBefore(LocalDateTime.now().minusMinutes(MATCH_WITH_PLAYER_TIMEOUT)))
+        if (playSide == PlaySide.FiRST_TEAM) {
             matchStepDto.setSecondTeamAction(randomizeActionByTeamChance(matchStepDto.getSecondTeamChance()));
         } else {
             matchStepDto.setSecondTeamAction(action);
             action = randomizeActionByTeamChance(matchStepDto.getFirstTeamChance());
+        } else {
+            if (playSide == PlaySide.FiRST_TEAM) {
+                if (matchStepDto.getSecondTeamAction() != 0) {
+                    matchStepDto.setTimeoutTime(LocalDateTime.now());
+                }
+                matchStepDto.setFirstTeamAction(action);
+            } else {
+                if (matchStepDto.getFirstTeamAction() != 0) {
+                    matchStepDto.setTimeoutTime(LocalDateTime.now());
+                }
+                matchStepDto.setSecondTeamAction(action);
+            }
+            if (matchStepDto.getFirstTeamAction() == 0 || matchStepDto.getSecondTeamAction() == 0) {
+                stepLog += "Ожидаем противника. Осталось " + (MATCH_WITH_PLAYER_TIMEOUT * 60 - ChronoUnit.SECONDS.between(matchStepDto.getTimeoutTime(), LocalDateTime.now())) + "секунд";
+                matchStepDto.setStep(matchStepDto.getStep() - 1);
+                updateBallCoordinate(matchStepDto, startPointBall);
+                matchStepDto.setLastStepLog(stepLog);
+                matchStepDto.getLog().add(matchStepDto.getLastStepLog());
+                return matchStepDto;
+            }
+            action = matchStepDto.getFirstTeamAction();
         }
 
         int addition = matchStepDto.getSecondTeamAction() == action ? EQUALS_ACTION_BONUS : 0;
@@ -487,7 +514,7 @@ public class MatchService {
         if (user != null && user.getTeamId() != null) {
             List<MatchPlay> matchPlays = matchRepository.getByStarted(LocalDate.now());
             for (MatchPlay m : matchPlays) {
-                if (m.getStatus() == MatchStatus.CREATED && (user.getTeamId().equals(m.getFirstTeamId()) || user.getTeamId().equals(m.getSecondTeamId())))
+                if (m.getStatus() != MatchStatus.FINISHED && (user.getTeamId().equals(m.getFirstTeamId()) || user.getTeamId().equals(m.getSecondTeamId())))
                     result.add(new MatchDto(m.getId(), PlaySide.CPU, m.getStarted(), teamService.getTeamById(m.getFirstTeamId()), teamService.getTeamById(m.getSecondTeamId()), m.getType()));
             }
         }
