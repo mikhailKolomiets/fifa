@@ -39,4 +39,7 @@ public interface GameConstants {
     //step of second player waiting in minutes
     int MATCH_WITH_PLAYER_TIMEOUT = 1;
 
+    int CHAT_MESSAGE_AMOUNT = 50;
+    String GUEST_NAME = "Гость";
+
 }

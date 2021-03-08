@@ -10,21 +10,23 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/md5.js"></script>
     <script src="js/main-page.js"></script>
     <script src="js/login.js"></script>
-    <link rel="stylesheet" href="css/match.css">
+    <link rel="stylesheet" href="css/main-page.css">
 </head>
-<style>
-body {
-  background: url("img/bgfifa.png") no-repeat right top;
-  height: 100%;
-  -webkit-background-size: cover;
-  -moz-background-size: cover;
-  -o-background-size: cover;
-  background-size: cover;
-}
-
-</style>
 <body>
-<div id = "last-matches">js d't work</div>
+
+<div class="chat" id="chat">
+    <button class="chat-button" id="chat-button">CHAT</button>
+    <br>
+    <div id="chat-body">
+        <div id="chat-form">
+            <input class="chat-message" id="chat-message" type="text">
+            <button id="chat-send">Отправить</button>
+        </div>
+        <textarea class="chat-text" id="chat-text" readonly rows="10"></textarea>
+    </div>
+</div>
+
+<div id="last-matches">js d't work</div>
 <br>
 <div id="login-message"></div>
 <div id="login">
