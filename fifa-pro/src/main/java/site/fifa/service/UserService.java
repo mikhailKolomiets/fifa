@@ -127,6 +127,15 @@ public class UserService {
         return null;
     }
 
+    public UserDTO samplqFindUserByKey(String key) {
+        for (UserDTO u : userOnline) {
+            if (u.getUser().getSessionKey().equals(key)) {
+                return u;
+            }
+        }
+        return null;
+    }
+
     @Scheduled(cron = "10 * * * * *")
     public void deleteByTimeOut() {
         for (UserDTO u : userOnline) {
