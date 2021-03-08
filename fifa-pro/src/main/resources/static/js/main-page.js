@@ -1,5 +1,6 @@
 $(document).ready(function () {
 
+var userName = "Guest";
 var message = $("#message");
 var teamForm = $("#team-form");
 var playSelect = $("#play-select");
@@ -12,6 +13,7 @@ var leagueGame1 = $("#league-game-1");
 var teamAdmin = $("#team-admin");
 var countryCheck = $("#country-check");
 var teamCheck = $("#team-check");
+var chat = $("#chat-body");
 hideAll();
 localStorage.setItem("p2p", "false");
 localStorage.removeItem("team1");
@@ -21,6 +23,9 @@ leagueGames = "";
 playersGoals = "";
 isLeagueGamesShow = true;
 leagueGamesId = 0;
+showChat = false;
+stompClient = "";
+chatContent ='';
 
     $("#play").click(function() {
     allMenuShow();
@@ -373,6 +378,7 @@ leagueGamesId = 0;
         countryCheck.hide();
         teamCheck.hide();
         $("#league-games-by-id").hide();
+        $("#chat-body").hide();
     }
 
     $.ajax({
@@ -399,5 +405,69 @@ leagueGamesId = 0;
     })
 
 $("#wiki").click(f => window.location.href = "wiki.html")
+$("#chat-button").click(f => {
+    if (showChat) {
+        $("#chat-body").hide();
+    } else {
+        $("#chat-body").show();
+        openChat();
+        //$("#chat-text").html(user.name + '' + userName)
+    }
+    showChat = !showChat;
+})
+
+$("#chat-send").click(f => {
+    messageBody = $("#chat-message").val()
+    stompClient.send("/app/chat/general/" + localStorage.getItem('sessionKey'), {}, messageBody);
+})
+
+function openChat() {
+if (stompClient == "")
+    initChatMessages();
+    socket = new SockJS('/fifa-stomp');
+    stompClient = Stomp.over(socket);
+    stompClient.connect({}, function (frame) {
+    stompClient.subscribe('/topic/chat/general/*', function (chatMessages) {
+        cm = JSON.parse(chatMessages.body)
+        chatContent = ' ' + convertDateToTimeBetween(cm.created) + " " + cm.fromName + " " + cm.messageBody + "&#10" + chatContent;
+        $("#chat-text").html(chatContent)
+    });
+});
+}
+
+function initChatMessages() {
+    chatContent
+    $.ajax({
+        url : 'chat/get-all',
+        type : 'GET',
+        success : cm => {
+            chatContent = ' ';
+            for(i in cm) {
+                chatContent += convertDateToTimeBetween(cm[i].created) + ' ' + cm[i].fromName + " " + cm[i].messageBody + "&#10 "
+                $("#chat-text").html(chatContent)
+            }
+        }
+    })
+}
+
+function convertDateToTimeBetween(date) {
+    s = Math.floor((new Date().getTime() - new Date(date).getTime())/1000)
+    if (s > 24 * 3600) {
+        return Math.floor(s / 24 * 3600) + ' дней'
+    }
+    m = Math.floor(s / 60);
+    s -= m * 60;
+    var result = s > 9 | m == 0 ? s + ' c' : '0' + s + ' c'
+    if (m > 0) {
+        h = Math.floor(m / 60)
+        m -= h * 60;
+        result = m > 9 | h == 0 ? m + ' м ' + result : '0' + m + ' м ' + result;
+        if (h > 0) {
+            result = h + " ч " + result
+        }
+    }
+
+    return result;
+}
 
 });

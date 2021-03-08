@@ -1,0 +1,36 @@
+body {
+  background: url("../img/bgfifa.png") no-repeat right top;
+  height: 100%;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+}
+
+.chat {
+    position:absolute;
+    top:0%;
+    left: 35%;
+    right: 35%;
+    text-align: center;
+}
+
+.chat-button {
+
+}
+
+.chat-message {
+width: 80%;
+}
+#chat-send {
+width: 15%;
+}
+
+
+.chat-text {
+    left: 0%;
+    position: absolute;
+    width: 100%;
+    resize: none;
+    border: none;
+}
