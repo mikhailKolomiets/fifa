@@ -453,7 +453,7 @@ function initChatMessages() {
 function convertDateToTimeBetween(date) {
     s = Math.floor((new Date().getTime() - new Date(date).getTime())/1000)
     if (s > 24 * 3600) {
-        return Math.floor(s / 24 * 3600) + ' дней'
+        return Math.floor(s / 24 / 3600) + ' дней'
     }
     m = Math.floor(s / 60);
     s -= m * 60;
