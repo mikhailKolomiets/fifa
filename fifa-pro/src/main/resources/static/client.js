@@ -18,6 +18,7 @@ conn.onmessage = function(msg) {
         //console.log('from handler' + data)
         //addToken(data);
         //$("#stream-info").text('stream ready...')
+        handleOffer(data)
         break;
     case "answer":
         handleAnswer(data);
@@ -64,7 +65,7 @@ if (peerConnection != null) {
     }
 
     peerConnection.oniceconnectionstatechange = function(evt) {
-    console.log("change ise state: " + peerConnection.iceConnectionState + " connection " + peerConnection.connectionState)
+    console.log("change ice state: " + peerConnection.iceConnectionState + " connection " + peerConnection.connectionState)
       if (peerConnection.iceConnectionState === "failed") {
         if (peerConnection.restartIce) {
         console.log("restart ice")
@@ -131,8 +132,8 @@ async function offerHelper() {
         //openCall(peerConnection);
 }
 
-function handleOffer(offer) {
-    peerConnection.setRemoteDescription(JSON.parse(offer))
+async function handleOffer(offer) {
+    await peerConnection.setRemoteDescription(JSON.parse(offer))
 //    .then(function () {
 //      return navigator.mediaDevices.getUserMedia(constraints);
 //    })
@@ -166,7 +167,7 @@ function handleAnswer(answer) {
 };
 
 function sendMessage() {
-player.play()
+//player.play()
 //openCall(peerConnection)
 }
 
@@ -182,19 +183,19 @@ const constraints = {
 //            facingMode : "user"
 //        }
 };
-$("#video-connect").click(f => {
+$("#video-connect").click(async f => {
 
     //initialize()
-    openCall(peerConnection)
-    setTimeout(f => offerHelper(), 1500)
-    //offerHelper()
+    await openCall(peerConnection)
+    //setTimeout(f => offerHelper(), 1500)
+    offerHelper()
     //console.log('video-stream added')
 })
 
 let inboundStream = null;
 let ls, usertrack;
 
-async function openCall(pc) {
+function openCall(pc) {
     if (peerConnection.iceConnectionState == 'disconnected') {
         console.log('try to restart ice')
         //peerConnection.restartIce()
@@ -202,7 +203,7 @@ async function openCall(pc) {
 //                reliable : true
 //            });
     }
-    await navigator.mediaDevices.getUserMedia(constraints)
+    return navigator.mediaDevices.getUserMedia(constraints)
     .then(function(localStream) {
         ls = localStream;
       document.getElementById("player-me").srcObject = localStream;
