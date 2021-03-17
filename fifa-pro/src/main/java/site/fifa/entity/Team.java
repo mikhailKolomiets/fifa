@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @NoArgsConstructor
@@ -26,4 +27,5 @@ public class Team {
     private Long leagueId;
     private int money;
     private int funs;
+    private LocalDateTime coachStarted;
 }

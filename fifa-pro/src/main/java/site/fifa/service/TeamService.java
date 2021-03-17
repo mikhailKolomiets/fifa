@@ -58,9 +58,12 @@ public class TeamService {
 
     public User assignTeamForUser(Long teamId) {
         User user = userRepository.findFirstByUserLastIp(servletRequest.getRemoteAddr());
-        if (user != null) {
+        Team team = teamRepository.findById(teamId).orElse(null);
+        if (user != null && team != null) {
             user.setTeamId(teamId);
             userRepository.save(user);
+            team.setCoachStarted(LocalDateTime.now());
+            teamRepository.save(team);
         }
         return user;
     }
@@ -90,6 +93,24 @@ public class TeamService {
         return new TeamDTO(leagueTableItem == null ? 0 : leagueTableItem.getPosition(),
                 teamRepository.findById(teamId).orElse(null), sortPlayersForGame(teamStuff.stream().filter(p -> !p.isReserve()).collect(Collectors.toList())),
                 teamStuff.stream().filter(Player::isReserve).collect(Collectors.toList()));
+    }
+
+    public Team resetCoach(Long teamId) {
+        Team team = teamRepository.findById(teamId).orElse(null);
+        if (team != null && (team.getCoachStarted() == null || team.getCoachStarted().isBefore(LocalDateTime.now().minusDays(GameConstants.COACH_DAYS_FOR_TEAM_CHANGE)))) {
+            User user = userRepository.findByTeamId(teamId);
+            if (user != null) {
+                user.setTeamId(null);
+                userRepository.save(user);
+                messageRepository.save(Message.builder().
+                        type(MessageTypeEnum.TEAM_ACTION).createTime(LocalDateTime.now()).
+                        body(LocalDate.now() + " " + user.getName() + " покинул пост тренера").toId(teamId).
+                        build());
+                team.setCoachStarted(null);
+            }
+        }
+
+        return team;
     }
 
     public Team updateOrSave(Team team) {

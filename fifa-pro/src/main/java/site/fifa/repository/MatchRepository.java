@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 import site.fifa.entity.match.MatchPlay;
 import site.fifa.entity.match.MatchStatus;
+import site.fifa.entity.match.MatchType;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -41,6 +42,8 @@ public interface MatchRepository extends JpaRepository<MatchPlay, Long> {
 
     @Query(nativeQuery = true, value = "select * from match_play mp where mp.type = 1 and mp.status = 2 order by mp.started desc limit :amount")
     List<MatchPlay> getLastLeagueMatches(@Param("amount") Long amount);
+
+    MatchPlay findFirstByTypeAndStatusOrderByIdDesc(MatchType matchType, MatchStatus matchStatus);
 
     @Transactional
     @Modifying

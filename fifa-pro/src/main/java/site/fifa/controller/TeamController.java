@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import site.fifa.constants.GameConstants;
 import site.fifa.dto.NewTeamCreateRequest;
 import site.fifa.dto.TeamDTO;
 import site.fifa.dto.UserDTO;
@@ -13,6 +14,8 @@ import site.fifa.service.MatchService;
 import site.fifa.service.TeamService;
 import site.fifa.service.UserService;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @RestController
@@ -70,6 +73,23 @@ public class TeamController {
     @GetMapping("get-free-by-country/{countryId}")
     public List<Team> getFreeByCountry(@PathVariable Long countryId) {
         return teamService.getFreeByCountry(countryId);
+    }
+
+    @PutMapping("reset/{teamId}")
+    public String resetTeam(@PathVariable Long teamId, @RequestParam String userkey) {
+        UserDTO userDTO = userService.findUserInSessionByKey(userkey);
+        if (userDTO == null || !teamId.equals(userDTO.getUser().getTeamId())) {
+            return "incorrect user";
+        } else if (userDTO.getUser().getTeamId() != null) {
+            Team team = teamService.resetCoach(teamId);
+            if (team == null) {
+                return "incorrect team data";
+            } else if (team.getCoachStarted() != null) {
+                return "Сменить команду можно через " + ChronoUnit.HOURS.between(LocalDateTime.now(), team.getCoachStarted().plusDays(GameConstants.COACH_DAYS_FOR_TEAM_CHANGE)) + " часов";
+            }
+        }
+        userDTO.getUser().setTeamId(null);
+        return null;
     }
 
 }
