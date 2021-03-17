@@ -32,27 +32,34 @@ public class LeagueService {
     private LeagueTableItemRepository leagueTableItemRepository;
 
     /**
-     * Every friday check start leagues in the all countries.
-     * The league contain from 5 to 25 team
+     * Every day check start leagues in the all countries.
+     * The league contain 8 team
      */
     @PostConstruct
-    @Scheduled(cron = "5 13 21 * * FRI")
+    @Scheduled(cron = "5 13 21 * * *")
     public void startLeagues() {
-        countryRepository.findAll().forEach(this::startLeagueByCountry);
+        if (matchRepository.findFirstByTypeAndStatusOrderByIdDesc(MatchType.LEAGUE, MatchStatus.CREATED) == null
+                && matchRepository.findFirstByTypeAndStatusOrderByIdDesc(MatchType.LEAGUE, MatchStatus.STARTED) == null
+                && matchRepository.findFirstByTypeAndStatusOrderByIdDesc(MatchType.EURO, MatchStatus.CREATED) == null
+                && matchRepository.findFirstByTypeAndStatusOrderByIdDesc(MatchType.EURO, MatchStatus.STARTED) == null
+                && (!checkEuroLeagueConditionForCreate() || !createEuroLeague())) {
+
+            countryRepository.findAll().forEach(this::startLeagueByCountry);
+
+        }
     }
 
     private void startLeagueByCountry(Country country) {
         //check if the league is finished
         resetLeaguesForTeamsIfLeaguesIsEnd(country);
 
-        System.out.println("attempt to create league for " + country.getCountryName());
         List<Team> countryTeams = teamRepository.getByCountryAndLeagueIdIsNull(new Country(country.getCountryId()));
 
         countryTeams = countryTeams.stream().filter(team -> team.getLeagueId() == null).collect(Collectors.toList());
         if (countryTeams.size() > 4 && countryTeams.size() < 26) {
             League league = leagueRepository.save(new League(null, country.getCountryName() + " league", country));
 
-            System.out.println("Create league with id " + league.getId());
+            System.out.println("Create " + country.getCountryName() + " league with id " + league.getId());
 
             countryTeams.forEach(team -> {
                 teamRepository.changeLeagueIdById(league.getId(), team.getId());
@@ -73,6 +80,45 @@ public class LeagueService {
         }
 
         return schedulingGame(matchPlays, teams.size());
+    }
+
+    private boolean createEuroLeague() {
+        List<Team> groupA = new ArrayList<>();
+        List<Team> groupB = new ArrayList<>();
+        for (Country c : countryRepository.findAll()) {
+            List<League> leagues = leagueRepository.getByCountryIfPresent(c.getCountryId());
+            if (leagues == null || leagues.size() == 0) {
+                System.out.println("cant create euro league couse " + c.getCountryName() + " d't play leagues");
+                return false;
+            }
+            List<LeagueTableItem> leagueTableItems = leagueTableItemRepository.getByLeagueId(leagues.get(0).getId());
+            leagueTableItems.sort(Comparator.comparingInt(LeagueTableItem::getPosition).reversed());
+
+            groupA.add(teamRepository.findById(leagueTableItems.get(c.getCountryId() > 2 ? 0 : 1).getTeamId()).orElse(null));
+            groupB.add(teamRepository.findById(leagueTableItems.get(c.getCountryId() > 2 ? 1 : 0).getTeamId()).orElse(null));
+        }
+        if (groupA.size() == 4 && groupB.size() == 4) {
+            League euroA = leagueRepository.save(new League(null, "EURO", null));
+            League euroB = leagueRepository.save(new League(null, "EURO", null));
+            groupA.forEach(team -> leagueTableItemRepository.save(new LeagueTableItem(euroA.getId(), team.getId())));
+            groupB.forEach(team -> leagueTableItemRepository.save(new LeagueTableItem(euroB.getId(), team.getId())));
+
+            List<MatchPlay> euroGames = scheduledLeagueGames(euroA.getId());
+            euroGames.forEach(g -> g.setType(MatchType.EURO));
+            matchRepository.saveAll(euroGames);
+            euroGames = scheduledLeagueGames(euroB.getId());
+            euroGames.forEach(g -> g.setType(MatchType.EURO));
+            matchRepository.saveAll(euroGames);
+
+            System.out.println("euro leagues created");
+        }
+        return false;
+    }
+
+    private boolean checkEuroLeagueConditionForCreate() {
+        MatchPlay lastEuroGame = matchRepository.findFirstByTypeAndStatusOrderByIdDesc(MatchType.EURO, MatchStatus.FINISHED);
+        MatchPlay lastLeagueGame = matchRepository.findFirstByTypeAndStatusOrderByIdDesc(MatchType.LEAGUE, MatchStatus.FINISHED);
+        return lastEuroGame == null || lastLeagueGame == null || !lastEuroGame.getStarted().isAfter(lastLeagueGame.getStarted());
     }
 
     public List<League> getLeaguesByCountryId(Long countryId) {
@@ -159,6 +205,7 @@ public class LeagueService {
 
     /**
      * Get List of league items that represent the teams of league
+     *
      * @param leagueId
      * @return
      */

@@ -246,4 +246,22 @@ $("#team-messages")
         })
     })
 
+$('#team-change').click(f => {
+    $.ajax({
+        url : 'team/reset/' + localStorage.getItem('teamadm'),
+        method : 'PUT',
+        data : {'userkey' : localStorage.getItem('sessionKey')},
+        success : function(data) {
+            if (data.length != 0) {
+                $("#team-change").text(data);
+            } else {
+                localStorage.setItem("teamadm",0);
+                window.location.href = "index.html";
+            }
+
+        console.log('result: ' + result)
+        }
+    })
+})
+
 });

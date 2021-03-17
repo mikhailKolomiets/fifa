@@ -674,8 +674,8 @@ public class MatchService {
         writeTeamMessages(firstTeam.getId(),
                 matchStepDto.getMatchDto().getDate() + " был проведен домашний матч лиги. Присутствовало " + matchStepDto.getFuns() + " болельщиков. Прибыль: " + moneyEarned);
         //funs update
-        firstTeam.setFuns(Math.max(0, firstTeam.getFuns() + f * GameConstants.ADD_FUNS_BY_GOAL - s * GameConstants.LOSE_FUNS_BY_GOAL));
-        secondTeam.setFuns(Math.max(0, secondTeam.getFuns() + s * GameConstants.ADD_FUNS_BY_GOAL - f * GameConstants.LOSE_FUNS_BY_GOAL));
+        firstTeam.setFuns(Math.min(firstTeam.getStadium().getPopulation() * FUN_LIMIT, Math.max(0, firstTeam.getFuns() + f * GameConstants.ADD_FUNS_BY_GOAL - s * GameConstants.LOSE_FUNS_BY_GOAL)));
+        secondTeam.setFuns(Math.min(secondTeam.getStadium().getPopulation() * FUN_LIMIT,Math.max(0, secondTeam.getFuns() + s * GameConstants.ADD_FUNS_BY_GOAL - f * GameConstants.LOSE_FUNS_BY_GOAL)));
 
         teamService.updateOrSave(firstTeam);
         teamService.updateOrSave(secondTeam);

@@ -3,12 +3,15 @@ package site.fifa.constants;
 public interface GameConstants {
 
     int AMOUNT_LAST_LEAGUE_GAME_FOR_STATISTIC = 5;
+    long COACH_DAYS_FOR_TEAM_CHANGE = 1;
     long USER_LOGOUT_TIMEOUT = 600;
     long USER_IP_CHECK_DAYS = 1;
 
     int FUN_TICKET_PRICE = 10;
     int ADD_FUNS_BY_GOAL = 2;
     int LOSE_FUNS_BY_GOAL = 1;
+    // max funs of team relative by stadium capacity (FUN_LIMIT * population)
+    int FUN_LIMIT = 3;
     int MAX_ADDITION_CHANCE = 50;
 
     // action calculating constants (1-100 is normally)
