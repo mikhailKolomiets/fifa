@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Smoke account</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="js/smoke.js"></script>
+</head>
+<body>
+<div id="message"></div>
+<div id="enter">
+    Cigarette cost: <input id="s-cost" type="text"><br>
+    Time between: <input id="s-time" type="text"><br>
+    Difficult:
+    <select id="type" name="secondTeam">
+    <option value="EASY">easy</option>
+    <option value="NORMAL">normal</option>
+    <option value="HARD">hard</option>
+    </select><br>
+    <input id="s-pre" type="text"><br>
+
+    <button id="account-create">Create</button>
+
+</div>
+<div id="smoke-account">
+    <button id="update-time">Update time</button>
+    <div id="sleep">
+        <br><br>Do you are sleep?
+        <button id="sleep-yes">YES</button>
+    </div>
+    <div id="cigarettes"></div>
+    <div id="money-lose"></div>
+    <div id="money-save"></div>
+    <div id="money-got"></div>
+    <div id="time-to-next"></div>
+    <div id="time-to-last"></div>
+    <button id="reverse-time">Reverse back</button>
+</div>
+</body>
+</html>
