@@ -4,7 +4,6 @@ $.ajax({
     url : 'smoke/get/' + localStorage.getItem('sessionKey'),
     type : 'GET',
     success : function(account) {
-        console.log('normally')
         updateAccountData(account)
     }
 })
@@ -33,7 +32,6 @@ $('#update-time').click(f => {
             url : 'smoke/update-time/' + localStorage.getItem('sessionKey'),
             type : 'PUT',
             success : function(data) {
-
                 updateAccountData(data)
             }
         })
@@ -65,18 +63,23 @@ function updateAccountData(account) {
             $("#money-got").text('If smoke you get: ' + showMoney(account.moneyByLast))
             $("#time-to-next").text('Time to next: ' + showTime(account.secondsNext))
             $("#time-to-last").text("Last time: " + showTime(account.secondsLast))
-            if (account.secondsNext < 0 && account.secondsNext / account.secondsLast + account.secondsNext > 2) {
+            if (account.secondsNext < 0 && account.secondsLast / (account.secondsLast + account.secondsNext) > 2) {
                 $("#sleep").show()
             }
         } else {
-                console.log('l < 0')
             $('#smoke-account').hide()
             $('#enter').show()
         }
 }
 
-$("#sleep").click(f => {
-
+$("#sleep-yes").click(f => {
+    $.ajax({
+        url : 'smoke/after-sleep/' + localStorage.getItem('sessionKey'),
+        type : 'PUT',
+        success : function(data) {
+            updateAccountData(data)
+        }
+    })
 })
 
     function showTime(s) {

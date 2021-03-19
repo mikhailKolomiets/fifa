@@ -58,4 +58,13 @@ public class SmokeAccountController {
         return smokeAccountService.reverseTime(userDTO.getUser().getId());
     }
 
+    @PutMapping("after-sleep/{key}")
+    public SmokeAccountDto updateAfterSleep(@PathVariable String key) {
+        UserDTO userDTO = userService.findUserInSessionByKey(key);
+        if (userDTO == null) {
+            return null;
+        }
+        return smokeAccountService.sleepMode(userDTO.getUser().getId());
+    }
+
 }
