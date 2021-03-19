@@ -69,7 +69,13 @@ public class SmokeAccountService {
     }
 
     public SmokeAccountDto sleepMode(Long userId) {
-        return null;
+        SmokeAccount s = getByUserId(userId);
+        if (s == null) {
+            return null;
+        }
+        LocalDateTime timeAfterSleep = LocalDateTime.now().minusSeconds(s.getCommonTime() + s.getCommonTime() * s.getCigarettes() * s.getType().getPercent() / 1000);
+        s.setLastSmoke(timeAfterSleep);
+        return new SmokeAccountDto(smokeAccountRepository.save(s));
     }
 
     public void delete(Long userId) {
