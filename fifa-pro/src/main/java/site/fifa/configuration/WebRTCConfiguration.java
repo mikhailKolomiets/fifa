@@ -11,7 +11,7 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 public class WebRTCConfiguration implements WebSocketConfigurer {
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry webSocketHandlerRegistry) {
-            webSocketHandlerRegistry.addHandler(new SocketHandler(), "/socket")
+            webSocketHandlerRegistry.addHandler(new SocketHandler(), "/socket/*")
                     .setAllowedOrigins("*");
     }
 }

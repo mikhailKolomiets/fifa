@@ -1,5 +1,5 @@
 //connecting to our signaling server
-var conn = new WebSocket('ws://192.168.0.104:8080/socket');
+var conn = new WebSocket('ws://football-play.herokuapp.com/socket/ws');
 
 conn.onopen = function() {
 
@@ -15,17 +15,22 @@ conn.onmessage = function(msg) {
     // when somebody wants to call us
     case "offer":
         //offerData = data;
-        //console.log('from handler' + data)
+        console.log('-- offer')
         //addToken(data);
         //$("#stream-info").text('stream ready...')
         handleOffer(data)
+        console.log('++ offer')
         break;
     case "answer":
+        console.log('-- answer')
         handleAnswer(data);
+        console.log('++ answer')
         break;
     // when a remote peer sends an ice candidate to us
     case "candidate":
+        console.log('-- candidate')
         handleCandidate(data);
+        console.log('++ candidate')
         break;
     default:
         break;
@@ -44,11 +49,8 @@ var player = document.getElementById("player");
 var playerMe = document.getElementById("player-me");
 
 function initialize() {
-if (peerConnection != null) {
-    console.log('description: ' + peerConnection.currentLocalDescription)
-} else {
     peerConnection = new RTCPeerConnection()
-}
+
 
     // Setup ice handling
     peerConnection.onicecandidate = function(event) {
@@ -66,16 +68,16 @@ if (peerConnection != null) {
 
     peerConnection.oniceconnectionstatechange = function(evt) {
     console.log("change ice state: " + peerConnection.iceConnectionState + " connection " + peerConnection.connectionState)
-      if (peerConnection.iceConnectionState === "failed") {
-        if (peerConnection.restartIce) {
-        console.log("restart ice")
-          peerConnection.restartIce();
-        } else {
-          peerConnection.createOffer({ iceRestart: true })
-          .then(peerConnection.setLocalDescription)
-          .then(sendOfferToServer);
-        }
-      }
+//      if (peerConnection.iceConnectionState === "failed") {
+//        if (peerConnection.restartIce) {
+//        console.log("restart ice")
+//          peerConnection.restartIce();
+//        } else {
+//          peerConnection.createOffer({ iceRestart: true })
+//          .then(peerConnection.setLocalDescription)
+//          .then(sendOfferToServer);
+//        }
+//      }
     }
 
     // creating data channel

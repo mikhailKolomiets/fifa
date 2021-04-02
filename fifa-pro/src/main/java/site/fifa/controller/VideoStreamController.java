@@ -18,9 +18,9 @@ public class VideoStreamController {
 
     @PostMapping("add")
     public void addToken(@RequestParam String token) {
-        if (tokens == null) {
-            tokens = new ArrayList<>();
-        }
+
+        tokens = new ArrayList<>();
+
         tokens.add(token);
         System.out.println("token: " + token);
     }
