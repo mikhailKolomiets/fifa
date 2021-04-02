@@ -3,6 +3,12 @@ $(document).ready(function () {
 var user;
 var habitId;
 
+setInterval(f => window.location.reload(), 300000)
+
+function whenTimeout() {
+window.location.reload();
+}
+
 $("#delete-habit-confirm").hide();
 
 $.ajax({
