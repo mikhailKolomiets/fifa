@@ -1,5 +1,5 @@
 //connecting to our signaling server
-var conn = new WebSocket('ws://football-play.herokuapp.com/socket/ws');
+var conn = new WebSocket('wss://football-play.herokuapp.com/socket/ws');
 
 conn.onopen = function() {
 
