@@ -41,7 +41,7 @@ public class TestController {
         }
         System.out.println("local unit list size : " + callbackList.size());
 
-        return HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase();
+        return HttpStatus.OK.getReasonPhrase();
     }
 
 }
