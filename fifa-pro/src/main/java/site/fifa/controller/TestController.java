@@ -20,7 +20,7 @@ public class TestController {
     private final String POINTS_KEY = "points";
     private final String SENT_KEY = "sent_at";
 
-    @GetMapping("mpd")
+    @PostMapping("mpd")
     public String multipleDate(@RequestParam(name = MSG_ID_KEY) List<String> msgIdList,
                                @RequestParam(name = STATUS_KEY) List<String> statusList,
                                @RequestParam(name = POINTS_KEY) List<String> pointList,
