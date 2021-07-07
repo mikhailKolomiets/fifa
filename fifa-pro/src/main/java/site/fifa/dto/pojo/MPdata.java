@@ -14,7 +14,7 @@ public class MPdata {
     public final String ID_KEY = "id";
     public final String DATA = "data";
 
-    private Long id;
+    private String id;
     private String data;
     private String elseData;
     private String any;
