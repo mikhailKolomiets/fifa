@@ -14,13 +14,13 @@ import java.util.Map;
 public class TestController {
 
     @GetMapping("mpd")
-    public void multipleDate(@RequestParam Map<String, List<String>> mPdata) {
+    public String multipleDate(@RequestParam Map<String, List<String>> mPdata) {
 
         System.out.println("Sms send result: \n" + mPdata.entrySet());
 
 
 
-        //return "Sms send result: " + mPdata.entrySet();
+        return "Sms send result: " + mPdata.entrySet();
     }
 
 }
