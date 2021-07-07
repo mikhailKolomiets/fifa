@@ -21,7 +21,7 @@ public class TestController {
     private final String SENT_KEY = "sent_at";
 
     @GetMapping("mpd")
-    public HttpStatus multipleDate(@RequestParam(name = MSG_ID_KEY) List<String> msgIdList,
+    public String multipleDate(@RequestParam(name = MSG_ID_KEY) List<String> msgIdList,
                                @RequestParam(name = STATUS_KEY) List<String> statusList,
                                @RequestParam(name = POINTS_KEY) List<String> pointList,
                                @RequestParam(name = SENT_KEY) List<String> sentList) {
@@ -40,12 +40,8 @@ public class TestController {
             }
         }
         System.out.println("local unit list size : " + callbackList.size());
-        //System.out.println("Sms send result: \n" + mPdata.entrySet());
 
-
-
-
-        return HttpStatus.OK;
+        return HttpStatus.OK.getReasonPhrase();
     }
 
 }
