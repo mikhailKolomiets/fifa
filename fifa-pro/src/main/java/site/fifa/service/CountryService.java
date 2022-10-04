@@ -2,6 +2,7 @@ package site.fifa.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import site.fifa.dto.NewTeamCreateRequest;
 import site.fifa.entity.Country;
 import site.fifa.repository.CountryRepository;
 
@@ -14,6 +15,7 @@ import java.util.List;
 public class CountryService {
 
     private final CountryRepository countryRepository;
+    private final TeamService teamService;
     /**
      *  add country to the database only from this code place
      */
@@ -33,6 +35,18 @@ public class CountryService {
                 countries.add(countryRepository.save(stubCountries.get(i)));
             }
         }
+
+        if (teamService.getFreeByCountry(1L).isEmpty()) {
+            teamService.createNewTeam(new NewTeamCreateRequest("Карпати", "Ukraine"));
+            teamService.createNewTeam(new NewTeamCreateRequest("Металіст-1925", "Ukraine"));
+            teamService.createNewTeam(new NewTeamCreateRequest("Динамо", "Ukraine"));
+            teamService.createNewTeam(new NewTeamCreateRequest("Ворскла", "Ukraine"));
+            teamService.createNewTeam(new NewTeamCreateRequest("Дніпро", "Ukraine"));
+            teamService.createNewTeam(new NewTeamCreateRequest("ЗСУ", "Ukraine"));
+            teamService.createNewTeam(new NewTeamCreateRequest("Таврія", "Ukraine"));
+            teamService.createNewTeam(new NewTeamCreateRequest("Кривбас", "Ukraine"));
+        }
+
 
         return countries;
     }
