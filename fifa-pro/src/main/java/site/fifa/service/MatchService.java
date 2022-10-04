@@ -70,7 +70,10 @@ public class MatchService {
     public MatchDto startGame(Long firstTeamId, Long secondTeamId) {
         MatchPlay match = matchRepository.getLastByFirstTeamIdAndSecondTeamIdAndStatus(firstTeamId, secondTeamId, MatchStatus.STARTED);
         if (match != null) {
-            return getMatchStepDtoById(match.getId()).getMatchDto();
+            MatchStepDto msd = getMatchStepDtoById(match.getId());
+            if (msd != null) {
+                return msd.getMatchDto();
+            }
         }
         match = matchRepository.getLastByFirstTeamIdAndSecondTeamIdAndStatus(firstTeamId, secondTeamId, MatchStatus.CREATED);
         MatchStepDto matchStepDto = new MatchStepDto();
