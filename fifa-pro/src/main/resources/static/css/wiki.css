@@ -15,3 +15,8 @@ button {
     border: none;
     border-radius: 15px;
 }
+
+.sm {
+    font-size: 30px;
+    color: red;
+}
