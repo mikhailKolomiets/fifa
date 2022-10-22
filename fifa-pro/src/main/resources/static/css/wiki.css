@@ -9,3 +9,9 @@ body {
     position:absolute;
     left:32%;
 }
+
+button {
+    background: #74a8bf;
+    border: none;
+    border-radius: 15px;
+}

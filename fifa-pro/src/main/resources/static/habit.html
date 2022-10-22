@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Звички</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/core.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/md5.js"></script>
@@ -10,15 +10,15 @@
     <link rel="stylesheet" href="css/wiki.css">
 </head>
 <body>
-<a id="main-page-ref" href="/">Главное меню</a><br>
-<input id="new-habit" type="text">
+<a id="main-page-ref" href="/">Головне меню</a><br><br>
+<input id="new-habit" type="text" placeholder="Введіть назву звички">
 <div id="create-habit">
-    create habit
+    <button>Створити</button>
 </div>
-<div id="habits-info"></div>
+<div id="habits-info"></div><br>
 <div id="habits-control"></div>
 <div id="delete-habit-confirm">
-    Введите пароль для подтверждения: <input id="user-password" type="password"><input id="delete-habit-button" type="button" value="Удалить привычку">
+    Ввеліть пароль для підтвердження: <input id="user-password" type="password"><input id="delete-habit-button" type="button" value="Видалити звичку">
 </div>
 </body>
 </html>

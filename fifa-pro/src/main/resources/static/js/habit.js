@@ -34,7 +34,7 @@ $.ajax({
                     var result = '';
                     for(i in habits) {
                         result += '<a><input class="hid" type="hidden" value="'+habits[i].id+'">'+habits[i].name+'<button class="up">Update</button>'+
-                        '<button class="rev">Reverse</button> HI:' + timeShow(habits[i].hiSeconds) + ' <button class="del">delete</button> </a><br>';
+                        '<button class="rev">Reverse</button> [' + timeShow(habits[i].hiSeconds) + '] <button class="del">delete</button> </a><br><br>';
                     }
                     $("#habits-control").html(result);
                     }

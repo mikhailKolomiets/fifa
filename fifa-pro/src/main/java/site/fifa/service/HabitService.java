@@ -25,7 +25,14 @@ public class HabitService {
     }
 
     public List<Habit> getHabits(Long userId) {
-        return habitRepository.getByUserId(userId);
+        List<Habit> habits = habitRepository.getByUserId(userId);
+        //todo dirty for LAST TIME USE
+        long lastTime;
+        for (Habit h : habits) {
+            lastTime = ChronoUnit.SECONDS.between(h.getLastUsage(), LocalDateTime.now());
+            h.setHiSeconds(lastTime);
+        }
+        return habits;
     }
 
     public String showUserHabits(Long userId) {
@@ -56,8 +63,8 @@ public class HabitService {
             }
             allPercent += percent;
             result.append(h.getName())
-                    .append(" (")
-                    .append(getHabitInfo(h))
+                    .append(" (HI: ")
+                    .append(getHabitHigth(h))
                     .append(" its ")
                     .append(new DecimalFormat("#0.000").format(percent))
                     .append("%");
@@ -112,8 +119,8 @@ public class HabitService {
         return habit;
     }
 
-    private String getHabitInfo(Habit habit) {
-        long seconds = ChronoUnit.SECONDS.between(habit.getLastUsage(), LocalDateTime.now());
+    private String getHabitHigth(Habit habit) {
+        long seconds = habit.getHiSeconds();
         String result = seconds % 60 + "s";
         if (result.length() == 2) {
             result = "0" + result;
