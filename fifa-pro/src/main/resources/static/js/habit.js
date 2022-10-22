@@ -3,6 +3,7 @@ $(document).ready(function () {
 var user;
 var habitId;
 var habits;
+dailyTime = 0;
 
 setInterval(f => window.location.reload(), 300000)
 
@@ -42,7 +43,6 @@ $.ajax({
                     setInterval( f =>
                     {
                     var result = '';
-                    dailyTime = 0;
                     for(i in habits) {
                         result += '<a><input class="hid" type="hidden" value="'+habits[i].id+'">'+habits[i].name+'<button class="up">Update</button>'+
                         '<button class="rev">Reverse</button> [' + timeShow(habits[i].hiSeconds + dailyTime++) + '] <button class="del">delete</button> </a><br><br>';
