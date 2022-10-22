@@ -32,11 +32,15 @@ $.ajax({
                     type : "GET",
                     success : function(habits) {
                     var result = '';
+                    setInterval( f =>
+                    {
+                    dailyTime = 0;
                     for(i in habits) {
                         result += '<a><input class="hid" type="hidden" value="'+habits[i].id+'">'+habits[i].name+'<button class="up">Update</button>'+
-                        '<button class="rev">Reverse</button> [' + timeShow(habits[i].hiSeconds) + '] <button class="del">delete</button> </a><br><br>';
+                        '<button class="rev">Reverse</button> [' + timeShow(habits[i].hiSeconds + dailyTime++) + '] <button class="del">delete</button> </a><br><br>';
                     }
-                    $("#habits-control").html(result);
+                    $("#habits-control").html(result);}, 1000
+                    )
                     }
                 })
             }
@@ -105,27 +109,35 @@ $("#create-habit").click(function() {
 
 function timeShow(seconds) {
 if (seconds == 0) {
-    return "0s"
+    return " - "
 }
-result = seconds % 60 + "s";
+s = addZero(seconds % 60) + "s";
     if (seconds / 60 < 1) {
-        return result;
+        return s;
     }
 seconds -= seconds % 60;
 seconds /= 60;
-result = seconds % 60 + "m:" + result;
+m = addZero(seconds % 60) + "m";
 if (seconds / 60 < 1) {
-    return result;
+    return m + ' : ' + s;
 }
 seconds -= seconds % 60;
 seconds /= 60;
-result = seconds % 24 + "h:" + result;
+h = addZero(seconds % 24) + "h";
 if (seconds / 24 < 1) {
-    return result;
+    return h + " : " + m;
 }
 seconds -= seconds % 24;
 seconds /= 24;
-return seconds + "d:" + result;
+return seconds + "d : " + h;
+}
+
+function addZero(data) {
+data += '';
+if (data.length == 1) {
+    return '0' + data;
+}
+return data;
 }
 
 })
