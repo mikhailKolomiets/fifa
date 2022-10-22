@@ -2,6 +2,7 @@ $(document).ready(function () {
 
 var user;
 var habitId;
+var habits;
 
 setInterval(f => window.location.reload(), 300000)
 
@@ -30,7 +31,14 @@ $.ajax({
                 $.ajax({
                     url : "habit/get-all/" + data.user.id,
                     type : "GET",
-                    success : function(habits) {
+                    success : function(habitsList) {
+                        habits = habitsList;
+                    }
+                })
+            }
+});
+
+// habits show time
                     setInterval( f =>
                     {
                     var result = '';
@@ -41,10 +49,6 @@ $.ajax({
                     }
                     $("#habits-control").html(result);}, 1000
                     )
-                    }
-                })
-            }
-});
 
 $(document).on('click', "[class^=up]", function() {
     var div = $(this).parents("a");
