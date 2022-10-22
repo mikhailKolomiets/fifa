@@ -28,7 +28,7 @@ $.ajax({
                     success : function(habits) {
                     $("#habits-info").text(habits);
                     if (habits.length > 0) {
-                        summary = text(stri.split('Summary: ')[1]);
+                        summary = text(habits.split('Summary: ')[1]);
                         $("#summary").text(summary);
                     }
                     }
