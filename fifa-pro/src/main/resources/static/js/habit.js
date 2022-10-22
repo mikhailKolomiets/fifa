@@ -45,8 +45,9 @@ $.ajax({
                     var result = '';
                     for(i in habits) {
                         result += '<a><input class="hid" type="hidden" value="'+habits[i].id+'">'+habits[i].name+'<button class="up">Update</button>'+
-                        '<button class="rev">Reverse</button> [' + timeShow(habits[i].hiSeconds + dailyTime++) + '] <button class="del">delete</button> </a><br><br>';
+                        '<button class="rev">Reverse</button> [' + timeShow(habits[i].hiSeconds + dailyTime) + '] <button class="del">delete</button> </a><br><br>';
                     }
+                    dailyTime++;
                     $("#habits-control").html(result);}, 1000
                     )
 
