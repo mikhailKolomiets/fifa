@@ -3,6 +3,7 @@ $(document).ready(function () {
 var user;
 var habitId;
 var habits;
+var hInfo;
 dailyTime = 0;
 
 setInterval(f => window.location.reload(), 300000)
@@ -27,10 +28,7 @@ $.ajax({
                     type : "GET",
                     success : function(habits) {
                     $("#habits-info").text(habits);
-                    if (habits.length > 0) {
-                        summary = habits.split('Summary: ')[1];
-                        $("#summary").text(summary);
-                    }
+                    hInfo = habits;
                     }
                 })
                 $.ajax({
@@ -50,6 +48,9 @@ $.ajax({
                     for(i in habits) {
                         result += '<a><input class="hid" type="hidden" value="'+habits[i].id+'">'+habits[i].name+'<button class="up">Update</button>'+
                         '<button class="rev">Reverse</button> [' + timeShow(habits[i].hiSeconds + dailyTime) + '] <button class="del">delete</button> </a><br><br>';
+                    }
+                    if (hInfo.length > 0) {
+                        $("#summary").text(hInfo.split('Summary: ')[1] + ' last upd ' + timeShow(dailyTime));
                     }
                     dailyTime++;
                     $("#habits-control").html(result);}, 1000
