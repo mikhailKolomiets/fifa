@@ -31,9 +31,9 @@ $.ajax({
                     url : "habit/get-all/" + data.user.id,
                     type : "GET",
                     success : function(habits) {
-                    var result = '';
                     setInterval( f =>
                     {
+                    var result = '';
                     dailyTime = 0;
                     for(i in habits) {
                         result += '<a><input class="hid" type="hidden" value="'+habits[i].id+'">'+habits[i].name+'<button class="up">Update</button>'+
